@@ -1,0 +1,17 @@
+{
+  "name": "frames",
+  "version": "0.0.1",
+  "description": "Get audio and video frames",
+  "dependencies": {
+    "bindings": "^1.5.0",
+    "canvas": "^2.8.0",
+    "express": "^4.17.1",
+    "node-addon-api": "^2.0.2",
+    "node-canvas": "^2.7.0",
+    "puppeteer": "^10.2.0",
+    "socket.io": "^3.1.2"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}

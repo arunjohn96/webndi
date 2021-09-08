@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <title>Abacies Webrtc</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Import Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+Tamma+2:wght@400;500;600&family=Josefin+Slab&display=swap" rel="stylesheet">
+
+  <!-- Import CSS file -->
+  <link rel="stylesheet" href="/static/styles.css">
+
+  <!-- <link rel="stylesheet" href="/css/main.css" /> -->
+
+</head>
+
+<body>
+
+  <div class="col-md-10 card card-body shadow-sm center-horizontal-absolute mt-4">
+    <div class="col-md-4 d-flex mb-3">
+      <select name="videoResolution" id="videoResolution" class="form-select fmxw-150">
+        <option value="0">Select Resoultion</option>
+        <option value="160">160x90</option>
+        <option value="320">320x180</option>
+        <option value="480">480x270</option>
+        <option value="640">640x360</option>
+        <option value="800">800x450</option>
+        <option value="960">960x540</option>
+        <option value="1120">1120x630</option>
+        <option selected value="1280">1280x720</option>
+        <option value="1440">1440x810</option>
+        <option value="1600">1600x900</option>
+        <option value="1760">1760x990</option>
+        <option value="1920">1920x1080</option>
+      </select>
+      <select name="frameRate" id="frameRate" class="fmxw-100 form-select mx-2">
+        <option value="1">1 Fps</option>
+        <option value="5">5 Fps</option>
+        <option selected value="10">10 Fps</option>
+        <option value="15">15 Fps</option>
+        <option value="20">20 Fps</option>
+        <option value="25">25 Fps</option>
+        <option value="30">30 Fps</option>
+      </select>
+    </div>
+    <div class="col-md-7 d-flex mb-3">
+
+      <div class="form-check form-switch mx-2 mt-2">
+        <input class="form-check-input" type="checkbox" id="BotStreamBroadcast" checked>
+        <label class="form-check-label" for="flexSwitchCheckChecked">Bot NDI</label>
+      </div>
+      <!-- <div class="form-check form-switch mx-2 mt-2">
+        <input class="form-check-input" type="checkbox" id="meetingCanvasBroadcast">
+        <label class="form-check-label" for="flexSwitchCheckChecked">Meeting Canvas NDI</label>
+      </div>
+      <div class="form-check form-switch mx-2 mt-2">
+        <input class="form-check-input" type="checkbox" id="AlphaStreamBroadcast">
+        <label class="form-check-label" for="flexSwitchCheckChecked">Alpha NDI</label>
+      </div>
+      <div class="form-check form-switch mx-2 mt-2">
+        <input class="form-check-input" type="checkbox" id="BetaStreamBroadcast">
+        <label class="form-check-label" for="flexSwitchCheckChecked">Beta NDI</label>
+      </div>
+      <div class="form-check form-switch mx-2 mt-2">
+        <input class="form-check-input" type="checkbox" id="GammaStreamBroadcast">
+        <label class="form-check-label" for="flexSwitchCheckChecked">Gamma NDI</label>
+      </div>
+      <div class="form-check form-switch mx-2 mt-2">
+        <input class="form-check-input" type="checkbox" id="DeltaStreamBroadcast">
+        <label class="form-check-label" for="flexSwitchCheckChecked">Delta NDI</label>
+      </div>
+      <div class="form-check form-switch mx-2 mt-2">
+        <input class="form-check-input" type="checkbox" id="EpsilonStreamBroadcast">
+        <label class="form-check-label" for="flexSwitchCheckChecked">Epsilon NDI</label>
+      </div>
+      <div class="form-check form-switch mx-2 mt-2">
+        <input class="form-check-input" type="checkbox" id="ZetaStreamBroadcast">
+        <label class="form-check-label" for="flexSwitchCheckChecked">Zeta NDI</label>
+      </div>
+      <div class="form-check form-switch mx-2 mt-2">
+        <input class="form-check-input" type="checkbox" id="EtaStreamBroadcast">
+        <label class="form-check-label" for="flexSwitchCheckChecked">Eta NDI</label>
+      </div> -->
+    </div>
+
+    <div class="row mt-2 border border-gray bg-gradient-dark">
+      <!-- <div class="col-lg-12 col-md-8 d-flex justify-content-center">
+        <canvas id="meetingCanvas" height="270" width="960" class="rounded mt-6 mb-4"></canvas>
+      </div> -->
+      <div class="row mt-4 justify-contents-evenly">
+        <div class="col d-flex justify-content-center mx-2">
+          <span class="text-gray-500 mt-n4 ">Bot</span>
+          <canvas name="Bot" id="Bot" class="rounded mb-6 my-2 "></canvas>
+        </div>
+        <!-- <div class="col d-flex justify-content-center mx-2">
+          <span class="text-gray-500 mt-n4"> Alpha</span>
+          <canvas name="Alpha" id="Alpha" class="rounded mb-6 my-2 "></canvas>
+        </div>
+        <div class="col d-flex justify-content-center mx-2">
+          <span class="text-gray-500 mt-n4">Beta</span>
+          <canvas name="Beta" id="Beta" class="rounded mb-6 my-2 "></canvas>
+        </div>
+        <div class="col d-flex justify-content-center mx-2">
+          <span class="text-gray-500 mt-n4"> Gamma</span>
+          <canvas name="Gamma" id="Gamma" class="rounded mb-6 my-2 "></canvas>
+        </div>
+        <div class="col d-flex justify-content-center mx-2">
+          <span class="text-gray-500 mt-n4 ">Delta</span>
+          <canvas name="Delta" id="Delta" class="rounded mb-6 my-2 "></canvas>
+        </div>
+        <div class="col d-flex justify-content-center mx-2">
+          <span class="text-gray-500 mt-n4">Epsilon</span>
+          <canvas name="Epsilon" id="Epsilon" class="rounded mb-6 my-2 "></canvas>
+        </div>
+        <div class="col d-flex justify-content-center mx-2">
+          <span class="text-gray-500 mt-n4">Zeta</span>
+          <canvas name="Zeta" id="Zeta" class="rounded mb-6 my-2 "></canvas>
+        </div>
+        <div class="col d-flex justify-content-center mx-2">
+          <span class="text-gray-500 mt-n4">Eta</span>
+          <canvas name="Eta" id="Eta" class="rounded mb-6 my-2 "></canvas>
+        </div> -->
+      </div>
+    </div>
+
+
+    <div class="row" id="video_display" hidden>
+      <div id="video_container" class="align-items-center" style="margin-top: 10%;">
+        <div class="col remote_div" id="div1">
+          <video id="remoteVideo1" class="" autoplay muted playsinline></video>
+        </div>
+        <!-- <div class="col remote_div" id="div2">
+          <video id="remoteVideo2" class="" autoplay playsinline></video>
+        </div>
+        <div class="col remote_div" id="div3">
+          <video id="remoteVideo3" class="" autoplay playsinline></video>
+        </div>
+        <div class="col remote_div" id="div4" style="">
+          <video id="remoteVideo4" class="" autoplay playsinline></video>
+        </div>
+        <div class="col remote_div" id="div4" style="">
+          <video id="remoteVideo5" class="" autoplay playsinline></video>
+        </div>
+        <div class="col remote_div" id="div4" style="">
+          <video id="remoteVideo6" class="" autoplay playsinline></video>
+        </div>
+        <div class="col remote_div" id="div4" style="">
+          <video id="remoteVideo7" class="" autoplay playsinline></video>
+        </div>
+        <div class="col remote_div" id="div4" style="">
+          <video id="remoteVideo8" class="" autoplay playsinline></video>
+        </div> -->
+      </div>
+    </div>
+
+
+
+    <!-- Import SocketIO for signalling -->
+    <script src="socket.io/socket.io.js"></script>
+
+    <!-- Import WebRTC adapter for compatibility with all the browsers  -->
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+
+    <!-- Import TURN config -->
+    <script src="/static/config.js"></script>
+
+    <!-- Import script containing WebRTC related functions -->
+    <script src="/static/watch.js"></script>
+  </div>
+</body>
+
+</html>
