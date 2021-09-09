@@ -78,24 +78,12 @@ io.sockets.on("connection", socket => {
 
   })
 
-  socket.on('audio frames', obj => {
-    audioProperties.id = obj.id
-    audioProperties.type = obj.type
-    audioProperties.channelName = obj.channelName
-    audioProperties.sampleRate = obj.sampleRate
-    audioProperties.noOfChannels = obj.noOfChannels
-    audioProperties.noOfSamples = obj.noOfSamples
-    audioProperties.channelStride = obj.channelStride
-    const audio_buf = new Int8Array(obj.data)
-    const audioFrameIs = new Float32Array(audio_buf, 4)
-    // audioFrameIs.set(obj.data)
-    // obj.data.forEach((item, i) => {
-    //
-    // });
-
-    console.log(audioFrameIs[0]);
+  socket.on('audio frames', msg => {
+    console.log(msg.byteLength)
     // ndi('sync', audioProperties, audioFrameIs.buffer, success);
   });
+
+
   socket.on('video frames', obj => {
     videoProperties.id = obj.id
     videoProperties.channelName = obj.channelName

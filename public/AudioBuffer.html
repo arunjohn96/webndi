@@ -1,0 +1,48 @@
+  <!DOCTYPE html>
+  <html>
+
+  <head>
+    <title>Audio Buffer</title>
+    <meta charset="UTF-8" />
+  </head>
+
+  <body>
+    <div id="AudioDiv">
+      <audio id="AudioSource" src="/static/audio.mp3" autoplay loop controls>
+      </audio>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+  </body>
+
+  </html>
+  <script>
+    var myAudio = document.querySelector('audio');
+    var audioCtx;
+    console.log("Initializing Console::::::");
+    const socket = io.connect();
+
+    function AudioData() {
+      console.log("Audio Clicked ::::::");
+      var source = audioCtx.createMediaElementSource(myAudio);
+      console.log("Source Loaded ::::::");
+      audioCtx.audioWorklet.addModule("/static/main_audio_processor.js")
+        .then(() => {
+          mainAudioProcessor = new AudioWorkletNode(audioCtx, "main-audio-processor");
+          source.connect(mainAudioProcessor);
+          mainAudioProcessor.port.onmessage = (e) => {
+            // console.log(e.data.audio_left)
+            socket.emit('audio frames', e.data.audio_left)
+          }
+          mainAudioProcessor.connect(audioCtx.destination);
+        })
+    };
+
+
+    document.getElementById('AudioDiv').addEventListener('click', () => {
+      audioCtx = new(AudioContext || webkitAudioContext)({
+        sampleRate: 48000,
+      });
+      AudioData();
+      myAudio.play()
+    })
+  </script>
