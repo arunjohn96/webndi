@@ -1,0 +1,132 @@
+  <!DOCTYPE html>
+  <html>
+
+  <head>
+    <title>Audio Video</title>
+    <meta charset="UTF-8" />
+  </head>
+
+  <body>
+    <div id="AudioDiv">
+      <video id="VideoSource" src="/static/video.webm" width="1280" height="720" loop controls>
+      </video>
+    </div>
+    <br>
+    <div id="DownloadDiv">
+      <canvas name="Bot" id="Bot" width="1280" height="720" hidden></canvas>
+      <a href="javascript:void(0)" download="data.raw" hidden>Download Raw Data</a>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+  </body>
+
+  </html>
+  <script>
+    const socket = io.connect();
+    var canvas = document.getElementById('Bot');
+    var ctx = canvas.getContext('2d');
+    var video = document.getElementById('VideoSource');
+    var audioCtx;
+    var source;
+
+    video.addEventListener('loadedmetadata', function() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+    });
+
+    video.addEventListener('play', function() {
+      sendAudio();
+      var $this = this; //cache
+      (function loop() {
+        if (!$this.paused && !$this.ended) {
+          ctx.drawImage($this, 0, 0);
+          setTimeout(loop, 1000 / 30); // drawing at 30fps
+          sendStream();
+          // console.log("send stream");
+        }
+      })();
+    }, 0);
+
+    function sendStream() {
+      const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      socket.emit('video frames', {
+        'id': 'Bot'.concat(canvas.width),
+        'channelName': 'Bot'.concat(canvas.width),
+        'height': canvas.height,
+        'width': canvas.width,
+        'frameRate': 30,
+        'data': frame.data
+      });
+    }
+
+    function sendAudio(){
+      console.log("Audio Function");
+      audioCtx = new(AudioContext || webkitAudioContext)({
+         sampleRate: 48000,
+       });
+      source = audioCtx.createMediaElementSource(video);
+      audioCtx.audioWorklet.addModule("/static/main_audio_processor.js")
+        .then(() => {
+          mainAudioProcessor = new AudioWorkletNode(audioCtx, "main-audio-processor");
+          mainAudioProcessor.connect(audioCtx.destination)
+          source.connect(mainAudioProcessor);
+          mainAudioProcessor.port.onmessage = (e) => {
+            // console.log(e.data.audio_left);
+            socket.emit('audio frames', e.data.audio_left.buffer)
+          }
+          // mainAudioProcessor.connect(audioCtx.destination);
+        })
+    }
+
+    // var download = document.querySelector("a[ download ]");
+    // var downloadUrl = null;
+    // var myAudio = document.querySelector('audio');
+    // var myAudioBuffer = new ArrayBuffer(1920000)
+    // var myAudioFl32 = new Float32Array(myAudioBuffer)
+    // var fl32Count = 0;
+    // console.log("Initializing Console::::::");
+    // // const socket = io.connect("http://localhost:5000");
+    // socket.emit("message", 'Hello:::')
+    //
+    //
+    // document.getElementById('AudioDiv').addEventListener('click', () => {
+    //   audioCtx = new(AudioContext || webkitAudioContext)({
+    //     sampleRate: 48000,
+    //   });
+    //   AudioData();
+    //   myAudio.play()
+    // })
+    //
+    //
+    // function updateDownloadHref(data) {
+    //   console.log("Preparing Download file :::::");
+    //
+    //   // Create a binary representation of the plain-text input.
+    //   var blob = new Blob(
+    //     [data], // Blob parts.
+    //     {
+    //       type: 'application/octet-stream'
+    //     }
+    //   );
+    //   if (downloadUrl) {
+    //
+    //     URL.revokeObjectURL(downloadUrl);
+    //
+    //   }
+    //
+    //   downloadUrl = URL.createObjectURL(blob);
+    //
+    //   // Tie the addressable version of the blob to the download link.
+    //   download.setAttribute("href", downloadUrl);
+    //   download.removeAttribute("hidden");
+    //   console.log("Download file ready :::::");
+    // };
+    //
+    // function updateAudioFl32(arrBuffer) {
+    //   const fl32 = new Float32Array(arrBuffer)
+    //   // console.log();
+    //   fl32.forEach((item, i) => {
+    //     myAudioFl32[fl32Count] = item;
+    //     fl32Count++;
+    //   });
+    // }
+  </script>
