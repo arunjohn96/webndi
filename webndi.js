@@ -47,6 +47,11 @@ app.get("/audio", function(req, res) {
 
   res.sendFile(__dirname + "/public/AudioBuffer.html");
 });
+
+app.get("/video", function(req, res) {
+
+  res.sendFile(__dirname + "/public/AudioVideo.html");
+});
 app.get("/panel", function(req, res) {
   res.sendFile(__dirname + "/public/watch.html");
 });
@@ -79,8 +84,25 @@ io.sockets.on("connection", socket => {
   })
 
   socket.on('audio frames', msg => {
-    console.log(msg.byteLength)
-    // ndi('sync', audioProperties, audioFrameIs.buffer, success);
+    // console.log("Audio recieved::::");
+    // const output_raw = new DataView(toArrayBuffer(msg.buffer)) // 80000
+    // const audio_buffer = new Float32Array(output_raw.buffer)
+    var fl32_audio = new Float32Array(msg, 4) // [-1, 1]  .... [128,65,45,963]
+    // console.log(fl32_audio);
+    fs.writeFile(__dirname + '/public/browser_data.txt', fl32_audio, err => {
+      if (err) {
+        console.error(err)
+        return
+      }
+    })
+
+    const noOfSamples = 111100
+    const channelStride = 111100*4
+    audioProperties.sampleRate = 48*180 +''
+    audioProperties.noOfChannels = '1'
+    audioProperties.noOfSamples = noOfSamples + ''
+    audioProperties.channelStride = channelStride + ''
+    ndi('sync', audioProperties, fl32_audio.buffer, success);
   });
 
 
@@ -135,21 +157,25 @@ function executeNDI() {
     const audio_buffer = new Float32Array(output_raw.buffer) //20000
     console.log(output_raw.byteLength, "DataViewLength:::");
     console.log(audio_buffer.length, "ArrayBuffer Length:::");
-    const sample_size = 1920
+    const sample_size = 8
+    const channelStride = 512
     audioProperties.sampleRate = '48000'
     audioProperties.noOfChannels = '1'
-    audioProperties.noOfSamples = sample_size+''
-    audioProperties.channelStride = sample_size + ''
+    audioProperties.noOfSamples = sample_size + ''
+    audioProperties.channelStride = channelStride + ''
     var i = 0;
-    setInterval(()=>{
-      const audio_frame = new Float32Array(audio_buffer.slice(i * sample_size, i * sample_size + (sample_size-1)).buffer)
-      console.log(audio_frame[0], audio_frame[1], i);
-      ndi('sync', audioProperties, audio_frame.buffer , success);
-      i++
-      if (i*sample_size > audio_buffer.length){
-        i=0;
-      }
-    },100)
+    const audio_frame = new Float32Array(audio_buffer.slice(i * sample_size, i * sample_size + (sample_size - 1)).buffer)
+    console.log(audio_frame);
+
+    // setInterval(()=>{
+    //   const audio_frame = new Float32Array(audio_buffer.slice(i * sample_size, i * sample_size + (sample_size-1)).buffer)
+    //   console.log(audio_frame[0], audio_frame[1], i);
+    //   ndi('sync', audioProperties, audio_frame.buffer , success);
+    //   i++
+    //   if (i<2){
+    //     i=0;
+    //   }
+    // },100)
     // Worked for 1920,43
     // console.log("Checking :::::: Length (ffmpeg, recieved data) :::", '('+data.length+','+ msg.length+')');
     console.log("Checking :::::: ffmpeg :::", output_raw.getFloat32(0, false));
