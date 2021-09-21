@@ -3,6 +3,7 @@ const app = express();
 const http = require("http");
 const server = http.createServer(app);
 const fs = require('fs')
+const AWS = require("aws-sdk");
 const io = require("socket.io")(server, {
   cors: {
     origin: '*',
@@ -17,18 +18,28 @@ const audioProperties = {
   id: 'a001',
   type: 'audio',
   channelName: 'test',
-  sampleRate: '48100',
+  sampleRate: '48000',
   noOfChannels: '2',
-  noOfSamples: '512',
-  channelStride: '512'
+  bytesPerSample: '4',
+  webFrameRate: '45',
+  webChannelStride: '128',
+  ndiChannelStride: '48000'
 };
 
 var videoProperties = {
   id: 'b001',
   type: 'video',
-  channelName: 'testVideo',
-  xres: '480',
-  yres: '320',
+  channelName: 'testv',
+  xres: '1280',
+  yres: '720',
+  frameRate: (1000 / 30) + ''
+};
+var videoProperties2 = {
+  id: 'b002',
+  type: 'video',
+  channelName: 'testv2',
+  xres: '1280',
+  yres: '720',
   frameRate: (1000 / 30) + ''
 };
 
@@ -43,6 +54,9 @@ function success(err, id, type) {
 app.get("/meeting", function(req, res) {
   res.sendFile(__dirname + "/public/broadcast.html");
 });
+app.get("/multibroadcast", function(req, res) {
+  res.sendFile(__dirname + "/public/multibroadcast.html");
+});
 app.get("/audio", function(req, res) {
 
   res.sendFile(__dirname + "/public/AudioBuffer.html");
@@ -50,12 +64,18 @@ app.get("/audio", function(req, res) {
 
 app.get("/video", function(req, res) {
 
-  res.sendFile(__dirname + "/public/AudioVideo.html");
+  res.sendFile(__dirname + "/public/AudioVideoBuffer.html");
 });
 app.get("/panel", function(req, res) {
   res.sendFile(__dirname + "/public/watch.html");
 });
 
+app.get("/browser", function(req, res) {
+  res.sendFile(__dirname + "/public/browser.html");
+});
+app.get("/server", function(req, res) {
+  res.sendFile(__dirname + "/public/server.html");
+});
 function toArrayBuffer(buf) {
   var ab = new ArrayBuffer(buf.length);
   var view = new Uint8Array(ab);
@@ -73,6 +93,8 @@ function toBuffer(ab) {
   }
   return buf;
 }
+const server_list = {}
+const browser_list = {}
 
 // SOCKET URLS
 io.sockets.on("error", e => console.log(e));
@@ -83,44 +105,17 @@ io.sockets.on("connection", socket => {
 
   })
 
-  socket.on('audio frames', msg => {
-    // console.log("Audio recieved::::");
-    // const output_raw = new DataView(toArrayBuffer(msg.buffer)) // 80000
-    // const audio_buffer = new Float32Array(output_raw.buffer)
-    var fl32_audio = new Float32Array(msg, 4) // [-1, 1]  .... [128,65,45,963]
-    // console.log(fl32_audio);
-    fs.writeFile(__dirname + '/public/browser_data.txt', fl32_audio, err => {
-      if (err) {
-        console.error(err)
-        return
-      }
-    })
-
-    const noOfSamples = 111100
-    const channelStride = 111100*4
-    audioProperties.sampleRate = 48*180 +''
-    audioProperties.noOfChannels = '1'
-    audioProperties.noOfSamples = noOfSamples + ''
-    audioProperties.channelStride = channelStride + ''
-    ndi('sync', audioProperties, fl32_audio.buffer, success);
+  socket.on('audio frames', audio => {
+    var audioFrameIs = new Uint8Array(audio.data);
+    ndi('sync', audioProperties, audioFrameIs.buffer, success);
   });
 
-
-  socket.on('video frames', obj => {
-    videoProperties.id = obj.id
-    videoProperties.channelName = obj.channelName
-    videoProperties.xres = obj.width
-    videoProperties.yres = obj.height
-    videoProperties.frameRate = obj.frameRate
-    var videoFrameIs = new Uint8ClampedArray(obj.data);
-    // var videoFrameIs2 = new Uint8ClampedArray(msg);
-
-    // socket.emit("rec", videoProperties);
-    //console.log(videoFrameIs);
+  socket.on('video frames', video => {
+    var videoFrameIs = new Uint8ClampedArray(video);
+    // var videoFrameIs2 = new Uint8ClampedArray(video);
     ndi('sync', videoProperties, videoFrameIs.buffer, success);
-    // ndi('sync',videoProperties2, videoFrameIs2.buffer, success2) ;
+    // ndi('sync', videoProperties2, videoFrameIs2.buffer, success);
   });
-
   // ########### Webrtc Sockets ##########
   socket.on("broadcaster", () => {
     broadcaster = socket.id;
@@ -140,6 +135,16 @@ io.sockets.on("connection", socket => {
   });
   socket.on("disconnect", () => {
     socket.to(broadcaster).emit("disconnectPeer", socket.id);
+  });
+
+  socket.on("browser", (ExternalUserID) => {
+    browser_list[ExternalUserID] = socket.id
+    console.log("Browser List:::::::", browser_list);
+  });
+  socket.on("server", () => {
+    var number_of_servers = Object.keys(server_list).length
+    server_list[str(number_of_servers + 1)] = socket.id
+    console.log("Server List:::::::", browser_list);
   });
 });
 

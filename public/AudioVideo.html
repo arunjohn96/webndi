@@ -34,7 +34,7 @@
     });
 
     video.addEventListener('play', function() {
-      sendAudio();
+      // sendAudio();
       var $this = this; //cache
       (function loop() {
         if (!$this.paused && !$this.ended) {
@@ -70,8 +70,8 @@
           mainAudioProcessor.connect(audioCtx.destination)
           source.connect(mainAudioProcessor);
           mainAudioProcessor.port.onmessage = (e) => {
-            // console.log(e.data.audio_left);
-            socket.emit('audio frames', e.data.audio_left.buffer)
+            // console.log("msg");
+            // socket.emit('audio frames', e.data.audio_left.buffer)
           }
           // mainAudioProcessor.connect(audioCtx.destination);
         })

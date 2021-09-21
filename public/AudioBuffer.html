@@ -8,18 +8,29 @@
 
   <body>
     <div id="AudioDiv">
-      <audio id="AudioSource" src="/static/audio.mp3" autoplay loop controls>
+      <audio id="AudioSource" src="/static/audio.mp3" controls>
       </audio>
+    </div>
+    <br>
+    <div id="DownloadDiv">
+      <a href="javascript:void(0)" download="data.raw" hidden>Download Raw Data</a>
     </div>
     <script src="/socket.io/socket.io.js"></script>
   </body>
 
   </html>
   <script>
+    var download = document.querySelector("a[ download ]");
+    var downloadUrl = null;
     var myAudio = document.querySelector('audio');
     var audioCtx;
+    var myAudioBuffer = new ArrayBuffer(1920000)
+    var myAudioFl32 = new Float32Array(myAudioBuffer)
+    var fl32Count = 0;
     console.log("Initializing Console::::::");
+    // const socket = io.connect("http://localhost:5000");
     const socket = io.connect();
+    socket.emit("message", 'Hello:::')
 
     function AudioData() {
       console.log("Audio Clicked ::::::");
@@ -30,8 +41,15 @@
           mainAudioProcessor = new AudioWorkletNode(audioCtx, "main-audio-processor");
           source.connect(mainAudioProcessor);
           mainAudioProcessor.port.onmessage = (e) => {
+            if(fl32Count < myAudioFl32.length){
+              // socket.emit('audio frames', {'data':e.data.audio_left})
+              updateAudioFl32(e.data.audio_left)
+              if(myAudio.currentTime >=10){
+                console.log("Audio seeked to >= 10 seconds::::");
+                updateDownloadHref(myAudioFl32)
+              }
+            }
             // console.log(e.data.audio_left)
-            socket.emit('audio frames', e.data.audio_left)
           }
           mainAudioProcessor.connect(audioCtx.destination);
         })
@@ -45,4 +63,38 @@
       AudioData();
       myAudio.play()
     })
+
+
+    function updateDownloadHref(data) {
+      console.log("Preparing Download file :::::");
+
+      // Create a binary representation of the plain-text input.
+      var blob = new Blob(
+        [data], // Blob parts.
+        {
+          type: 'application/octet-stream'
+        }
+      );
+      if (downloadUrl) {
+
+        URL.revokeObjectURL(downloadUrl);
+
+      }
+
+      downloadUrl = URL.createObjectURL(blob);
+
+      // Tie the addressable version of the blob to the download link.
+      download.setAttribute("href", downloadUrl);
+      download.removeAttribute("hidden");
+      console.log("Download file ready :::::");
+    };
+
+    function updateAudioFl32(arrBuffer) {
+      const fl32 = new Float32Array(arrBuffer)
+      // console.log();
+      fl32.forEach((item, i) => {
+        myAudioFl32[fl32Count] = item;
+          fl32Count++;
+      });
+    }
   </script>

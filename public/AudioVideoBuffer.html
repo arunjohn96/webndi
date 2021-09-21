@@ -1,0 +1,242 @@
+  <!DOCTYPE html>
+  <html>
+
+  <head>
+    <title>Audio Buffer</title>
+    <meta charset="UTF-8" />
+  </head>
+
+  <body>
+    <div id="AudioDiv" hidden>
+      <video id="VideoSource" width="1280" height="720" loop controls hidden>
+      </video>
+    </div>
+    <br>
+    <div id="DownloadDiv">
+      <button type="button" name="button" onclick="startStream()">Play</button>
+      <button type="button" name="button" onclick="stopStream()">Pause</button>
+      <br>
+      <canvas name="Bot" id="Bot" width="1280" height="720"></canvas>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/static/config.js"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.990.0.min.js"></script>
+  </body>
+
+  </html>
+  <script>
+    const videoSocket = io.connect();
+    const audioSocket = io.connect("http://localhost:7001");
+    let peerConnection;
+    const config = turnConfig;
+    let silence = () => {
+      let ctx = new AudioContext(),
+        oscillator = ctx.createOscillator();
+      let dst = oscillator.connect(ctx.createMediaStreamDestination());
+      oscillator.start();
+      return Object.assign(dst.stream.getAudioTracks()[0], {
+        enabled: false
+      });
+    }
+    let black = ({
+      width = 960,
+      height = 540
+    } = {}) => {
+      let canvas = Object.assign(document.createElement("canvas"), {
+        width,
+        height
+      });
+      canvas.getContext('2d').fillRect(0, 0, width, height);
+      let stream = canvas.captureStream();
+      return Object.assign(stream.getVideoTracks()[0], {
+        enabled: false
+      });
+    }
+    let blackSilence = () => new MediaStream([black(), silence()]);
+    var dummyStream = blackSilence();
+    var video = document.getElementById('VideoSource');
+
+    video.srcObject = dummyStream;
+
+    videoSocket.on("offer", (id, description) => {
+      // if (peerConnection === undefined){
+      peerConnection = new RTCPeerConnection(config);
+      // }
+
+      peerConnection
+        .setRemoteDescription(description)
+        .then(() => peerConnection.createAnswer())
+        .then(sdp => peerConnection.setLocalDescription(sdp))
+        .then(() => {
+          videoSocket.emit("answer", id, peerConnection.localDescription);
+        });
+      peerConnection.ontrack = handleRemoteStreamAdded
+      peerConnection.onicecandidate = event => {
+        if (event.candidate) {
+          videoSocket.emit("candidate", id, event.candidate);
+        }
+      };
+    });
+
+    videoSocket.on("candidate", (id, candidate) => {
+      peerConnection
+        .addIceCandidate(new RTCIceCandidate(candidate))
+        .catch(e => console.error(e));
+    });
+
+    videoSocket.on("connect", () => {
+      videoSocket.emit("watcher");
+    });
+
+    videoSocket.on("broadcaster", () => {
+      console.log("Got an incoming connection::::: broadcaster :::");
+      videoSocket.emit("watcher");
+      console.log("Sending signal from panel to accept ::::: watcher :::");
+    });
+
+    var canvas = document.getElementById('Bot');
+    var ctx = canvas.getContext('2d');
+    var audioCtx;
+    var source;
+    var videoFlag = false,
+      audioFlag = false;
+
+
+
+    var stream = canvas.captureStream(30);
+    var recordedChunks = [];
+
+    mediaRecorder = new MediaRecorder(stream, options);
+    console.log(stream);
+    var options = {
+      mimeType: "video/webm; codecs=vp9"
+    };
+
+    mediaRecorder.ondataavailable = handleDataAvailable;
+
+    function handleRemoteStreamAdded(event) {
+      console.log('Remote stream added.');
+      var newStream = event.streams[0];
+      video.srcObject = newStream;
+      console.log("Details of newly added Stream ::::", newStream);
+    };
+
+    function startStream() {
+      videoFlag = true
+      audioFlag = true
+      video.play()
+      if (mediaRecorder.state == "recording") {
+        mediaRecorder.stop();
+      }
+      recordedChunks = []
+      mediaRecorder.start();
+      sendAudio();
+    }
+
+    function stopStream() {
+      videoFlag = false
+      audioFlag = false
+      video.pause()
+      mediaRecorder.stop();
+    }
+
+
+    video.addEventListener('play', function() {
+      // sendAudio();
+      var $this = this; //cache
+      (function loop() {
+        if (!$this.paused && !$this.ended) {
+          ctx.drawImage($this, 0, 0, 1280, 720);
+          setTimeout(loop, 1000 / 15); // drawing at 30fps
+          sendStream();
+        }
+      })();
+    }, 0);
+
+    function sendStream() {
+      if (videoFlag) {
+        const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        videoSocket.emit('video frames', frame.data);
+      }
+    }
+
+    function sendAudio() {
+      if (typeof source === 'undefined') {
+        let audioCtx = new AudioContext({
+          sampleRate: 48000,
+        });
+        console.log("Initializing");
+        source = audioCtx.createMediaStreamSource(video.srcObject);
+        audioCtx.audioWorklet.addModule("/static/main_audio_processor.js")
+          .then(() => {
+            var mainAudioProcessor = new AudioWorkletNode(audioCtx, "main-audio-processor");
+            source.connect(mainAudioProcessor);
+            mainAudioProcessor.connect(audioCtx.destination)
+            mainAudioProcessor.port.onmessage = (e) => {
+              if (audioFlag) {
+                // console.log(e.data);
+                audioSocket.emit('audio frames', e.data)
+              }
+            }
+          });
+      }
+    }
+
+    function handleDataAvailable(event) {
+      console.log("data-available");
+      if (event.data.size > 0) {
+        recordedChunks.push(event.data);
+        console.log(recordedChunks);
+        download();
+      } else {
+        // ...
+      }
+
+    }
+
+    const upload = async function uploadFilesToS3(extension, path, file, fileName) {
+      console.log("Initializing upload to s3:::::::::::");
+      // await uploadFilesToS3('webm', 'uploads', file, 'myfile');
+      return new Promise(async (resolve, reject) => {
+        const bucket = new AWS.S3({
+          accessKeyId: "AKIAZXGON4JC7UO5Y6OE",
+          secretAccessKey: "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",
+          region: "us-east-1"
+        });
+        const params = {
+          Bucket: 'webndi',
+          Key: path + "/" + fileName + '.' + extension,
+          Body: file
+        };
+        bucket.upload(params, async (err, data) => {
+          if (data) {
+            console.log("Video uploaded")
+          }
+          if (err) {
+            console.log("Video uploaded failed")
+          }
+        })
+      })
+    }
+
+    function download() {
+      var blob = new Blob(recordedChunks, {
+        type: "video/webm"
+      });
+      let file = new File([blob], 'filename', {
+        type: 'video/webm',
+        lastModified: Date.now()
+      })
+
+      upload('webm','uploads',file,'myfile');
+
+      // var url = URL.createObjectURL(blob);
+      // var a = document.createElement("a");
+      // document.body.appendChild(a);
+      // a.style = "display: none";
+      // a.href = url;
+      // a.download = "test.webm";
+      // a.click();
+      // window.URL.revokeObjectURL(url);
+    }
+  </script>

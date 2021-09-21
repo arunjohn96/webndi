@@ -587,14 +587,15 @@ function sendStream(stream, canvasOptions, trackNumber) {
   const canvas = canvasOptions.canvas
   const ctx = canvasOptions.ctx
   var frame = ctx.getImageData(0, 0, canvasOptions.width, canvasOptions.height);
-  streamSocket.emit('video frames', {
-    'id': (canvasOptions.name).concat(canvasOptions.width),
-    'channelName': (canvasOptions.name).concat(canvasOptions.width),
-    'height': canvasOptions.height,
-    'width': canvasOptions.width,
-    'frameRate': getFrameRate(),
-    'data': frame.data
-  });
+  // streamSocket.emit('video frames', {
+  //   'id': (canvasOptions.name).concat(canvasOptions.width),
+  //   'channelName': (canvasOptions.name).concat(canvasOptions.width),
+  //   'height': canvasOptions.height,
+  //   'width': canvasOptions.width,
+  //   'frameRate': getFrameRate(),
+  //   'data': frame.data
+  // });
+  streamSocket.emit('video frames', frame.data)
 }
 
 function getFrameRate() {

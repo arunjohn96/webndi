@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Server</title>
+  <meta charset="UTF-8" />
+</head>
+
+<body>
+  <script src="/socket.io/socket.io.js"></script>
+</body>
+
+</html>
+<script>
+  const socket = io.connect();
+  socket.emit("server")
+</script>
