@@ -8,7 +8,7 @@
 
   <body>
     <div id="AudioDiv" hidden>
-      <video id="VideoSource" width="480" height="270" loop controls >
+      <video id="VideoSource" width="1280" height="720" loop controls hidden>
       </video>
     </div>
     <br>
@@ -16,7 +16,7 @@
       <button type="button" name="button" onclick="startStream()">Play</button>
       <button type="button" name="button" onclick="stopStream()">Pause</button>
       <br>
-      <canvas name="Bot" id="Bot" width="480" height="270"></canvas>
+      <canvas name="Bot" id="Bot" width="1280" height="720"></canvas>
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/static/config.js"></script>
@@ -39,8 +39,8 @@
       });
     }
     let black = ({
-      width = 480,
-      height = 270
+      width = 960,
+      height = 540
     } = {}) => {
       let canvas = Object.assign(document.createElement("canvas"), {
         width,
@@ -146,7 +146,7 @@
       var $this = this; //cache
       (function loop() {
         if (!$this.paused && !$this.ended) {
-          ctx.drawImage($this, 0, 0, 480, 270);
+          ctx.drawImage($this, 0, 0, 1280, 720);
           setTimeout(loop, 1000 / 15); // drawing at 30fps
           sendStream();
         }
