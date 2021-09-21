@@ -103,22 +103,21 @@
 
 
 
-    var stream = canvas.captureStream(30);
-    var recordedChunks = [];
+    // var stream = canvas.captureStream(30);
+    // var recordedChunks = [];
 
-    mediaRecorder = new MediaRecorder(stream, options);
-    console.log(stream);
-    var options = {
-      mimeType: "video/webm; codecs=vp9"
-    };
+    // mediaRecorder = new MediaRecorder(stream, options);
+    // console.log(stream);
+    // var options = {
+    //   mimeType: "video/webm; codecs=vp9"
+    // };
 
-    mediaRecorder.ondataavailable = handleDataAvailable;
+    // mediaRecorder.ondataavailable = handleDataAvailable;
 
     function handleRemoteStreamAdded(event) {
       console.log('Remote stream added.');
       var newStream = event.streams[0];
       video.srcObject = newStream;
-      video.play()
       console.log("Details of newly added Stream ::::", newStream);
     };
 
@@ -126,11 +125,11 @@
       videoFlag = true
       audioFlag = true
       video.play()
-      if (mediaRecorder.state == "recording") {
-        mediaRecorder.stop();
-      }
-      recordedChunks = []
-      mediaRecorder.start();
+      // if (mediaRecorder.state == "recording") {
+      //   mediaRecorder.stop();
+      // }
+      // recordedChunks = []
+      // mediaRecorder.start();
       sendAudio();
     }
 
@@ -138,7 +137,7 @@
       videoFlag = false
       audioFlag = false
       video.pause()
-      mediaRecorder.stop();
+      // mediaRecorder.stop();
     }
 
 
@@ -166,7 +165,7 @@
         let audioCtx = new AudioContext({
           sampleRate: 48000,
         });
-        console.log("Initializing");
+        console.log("Initializing Audio Context :::::");
         source = audioCtx.createMediaStreamSource(video.srcObject);
         audioCtx.audioWorklet.addModule("/static/main_audio_processor.js")
           .then(() => {
