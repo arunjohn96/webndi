@@ -30,7 +30,7 @@
 
 </html>
 <script>
-  const socket = io.connect("http://localhost");
+  const socket = io.connect();
   const ExternalUserId = prompt("Enter user name:")
   const peerConnections = {};
   const config = turnConfig;
@@ -172,7 +172,5 @@
       console.error("Error: ", error);
     }
   })
-
-
 
 </script>

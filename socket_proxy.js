@@ -11,7 +11,7 @@ const io = require("socket.io")(server, {
 app.use('/static', express.static('public'))
 
 
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 7000;
 
 
 app.get("/browser", function(req, res) {
@@ -21,7 +21,7 @@ app.get("/server", function(req, res) {
   res.sendFile(__dirname + "/public/server.html");
 });
 
-const server_list = ['http://localhost:8000', 'http://localhost:8001']
+const server_list = ['https://stream1.webrtc2ndi.life']
 const browser_list = {}
 
 // SOCKET URLS

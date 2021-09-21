@@ -25,8 +25,8 @@
 
   </html>
   <script>
-    const videoSocket = io.connect();
-    const audioSocket = io.connect("http://localhost:7001");
+    const videoSocket = io.connect("http://localhost:8000");
+    const audioSocket = io.connect("http://localhost:8001");
     let peerConnection;
     const config = turnConfig;
     let silence = () => {

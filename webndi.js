@@ -44,7 +44,7 @@ var videoProperties2 = {
 };
 
 let broadcaster;
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 8000;
 
 function success(err, id, type) {
   // console.log(`successfully send ${type} frame - [${id}]`) ;
