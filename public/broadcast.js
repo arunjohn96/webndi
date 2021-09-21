@@ -12,7 +12,7 @@ socket.on("watcher", id => {
   peerConnections[id] = peerConnection;
 
   let stream = videoElement.srcObject;
-  stream.getVideoTracks().forEach(track => peerConnection.addTrack(track, stream));
+  stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
 
   peerConnection.onicecandidate = event => {
     if (event.candidate) {
