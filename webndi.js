@@ -18,28 +18,28 @@ const audioProperties = {
   id: 'a001',
   type: 'audio',
   channelName: 'test',
-  sampleRate: '48000',
+  sampleRate: '128000',
   noOfChannels: '2',
   bytesPerSample: '4',
   webFrameRate: '45',
   webChannelStride: '128',
-  ndiChannelStride: '48000'
+  ndiChannelStride: '128000'
 };
 
 var videoProperties = {
   id: 'b001',
   type: 'video',
   channelName: 'testv',
-  xres: '480',
-  yres: '270',
+  xres: '1280',
+  yres: '720',
   frameRate: (1000 / 30) + ''
 };
 var videoProperties2 = {
   id: 'b002',
   type: 'video',
   channelName: 'testv2',
-  xres: '480',
-  yres: '270',
+  xres: '1280',
+  yres: '720',
   frameRate: (1000 / 15) + ''
 };
 
@@ -164,7 +164,7 @@ function executeNDI() {
     console.log(audio_buffer.length, "ArrayBuffer Length:::");
     const sample_size = 8
     const channelStride = 512
-    audioProperties.sampleRate = '48000'
+    audioProperties.sampleRate = '128000'
     audioProperties.noOfChannels = '1'
     audioProperties.noOfSamples = sample_size + ''
     audioProperties.channelStride = channelStride + ''
