@@ -8,7 +8,7 @@
 
   <body>
     <div id="AudioDiv" hidden>
-      <video id="VideoSource" width="1280" height="720" loop controls hidden>
+      <video id="VideoSource" width="1280" height="720" loop controls>
       </video>
     </div>
     <br>
@@ -187,7 +187,7 @@
       if (event.data.size > 0) {
         recordedChunks.push(event.data);
         console.log(recordedChunks);
-        download();
+        // download();
       } else {
         // ...
       }
