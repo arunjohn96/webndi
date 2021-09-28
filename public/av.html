@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+  <html>
+
+  <head>
+    <title>Audio Buffer</title>
+    <meta charset="UTF-8" />
+  </head>
+
+  <body>
+    <div id="AudioDiv" hidden>
+      <video id="VideoSource" src="/static/video.webm" width="480" height="320" loop controls hidden>
+      </video>
+    </div>
+    <br>
+    <div id="DownloadDiv">
+      <button type="button" name="button" onclick="startStream()">Play</button>
+      <button type="button" name="button" onclick="stopStream()">Pause</button>
+      <br>
+      <canvas name="Bot" id="Bot" width="480" height="320"></canvas>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+  </body>
+
+  </html>
+  <script>
+    const socket = io.connect();
+    var canvas = document.getElementById('Bot');
+    var ctx = canvas.getContext('2d');
+    var video = document.getElementById('VideoSource');
+    var audioCtx;
+    var source;
+    var videoFlag = false,
+      audioFlag = false;
+ function startStream() {
+      videoFlag = true
+      audioFlag = true
+      video.play()
+      sendAudio();
+    }
+
+    function stopStream() {
+      videoFlag = false
+      audioFlag = false
+      video.pause()
+    }
+    video.addEventListener('loadedmetadata', function() {
+      // canvas.width = video.videoWidth;
+      // canvas.height = video.videoHeight;
+    });
+
+ video.addEventListener('play', function() {
+      // sendAudio();
+      var $this = this; //cache
+      (function loop() {
+        if (!$this.paused && !$this.ended) {
+          ctx.drawImage($this, 0, 0, 480, 320);
+          setTimeout(loop, 1000 / 30); // drawing at 30fps
+          sendStream();
+        }
+      })();
+    }, 0);
+
+function sendStream() {
+      if (videoFlag) {
+        const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        socket.emit('video frames', frame.data);
+      }
+    }
+
+ function sendAudio() {
+      if(typeof source === 'undefined'){
+        let audioCtx = new AudioContext({
+          sampleRate: 48000,
+        });
+        console.log("Initializing");
+        source = audioCtx.createMediaElementSource(video);
+        audioCtx.audioWorklet.addModule("/static/main_audio_processor.js")
+        .then(() => {
+  var mainAudioProcessor = new AudioWorkletNode(audioCtx, "main-audio-processor");
+          source.connect(mainAudioProcessor);
+          mainAudioProcessor.connect(audioCtx.destination)
+          mainAudioProcessor.port.onmessage = (e) => {
+            if (audioFlag) {
+              // console.log(e.data);
+              socket.emit('audio frames', e.data)
+            }
+          }
+        });
+      }
+    }
+  </script>
