@@ -8,7 +8,7 @@
 
   <body>
     <div id="AudioDiv" hidden>
-      <video id="VideoSource" src="/static/video.webm" width="1280" height="720" loop controls hidden>
+      <video id="VideoSource" src="/static/video.webm" width="480" height="320" loop controls hidden>
       </video>
     </div>
     <br>
@@ -16,15 +16,15 @@
       <button type="button" name="button" onclick="startStream()">Play</button>
       <button type="button" name="button" onclick="stopStream()">Pause</button>
       <br>
-      <canvas name="Bot" id="Bot" width="1280" height="720"></canvas>
+      <canvas name="Bot" id="Bot" width="480" height="320"></canvas>
     </div>
     <script src="/socket.io/socket.io.js"></script>
   </body>
 
   </html>
   <script>
-    const videoSocket = io.connect();
-    const audioSocket = io.connect("http://localhost:8000");
+    const videoSocket = io.connect("http://localhost:8000");
+    const audioSocket = io.connect("http://localhost:8001");
     var canvas = document.getElementById('Bot');
     var ctx = canvas.getContext('2d');
     var video = document.getElementById('VideoSource');
@@ -55,7 +55,7 @@
       var $this = this; //cache
       (function loop() {
         if (!$this.paused && !$this.ended) {
-          ctx.drawImage($this, 0, 0, 1280, 720);
+          ctx.drawImage($this, 0, 0, 480, 320);
           setTimeout(loop, 1000 / 30); // drawing at 30fps
           sendStream();
         }

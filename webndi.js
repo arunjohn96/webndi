@@ -15,31 +15,31 @@ app.use('/static', express.static('public'))
 ndi = addon.ndi;
 
 const audioProperties = {
-  id: 'a001',
-  type: 'audio',
-  channelName: 'test',
-  sampleRate: '128000',
-  noOfChannels: '2',
-  bytesPerSample: '4',
-  webFrameRate: '45',
-  webChannelStride: '128',
-  ndiChannelStride: '128000'
+    id: 'a001',
+    type: 'audio',
+    channelName: 'test-a1',
+    sampleRate: '48000',
+    noOfChannels: '2',
+    bytesPerSample:'4',
+    webFrameRate: '45',
+    webChannelStride: '128',
+    ndiChannelStride: '48000'
 };
 
 var videoProperties = {
   id: 'b001',
   type: 'video',
   channelName: 'testv',
-  xres: '1280',
-  yres: '720',
+  xres: '480',
+  yres: '320',
   frameRate: (1000 / 30) + ''
 };
 var videoProperties2 = {
   id: 'b002',
   type: 'video',
   channelName: 'testv2',
-  xres: '1280',
-  yres: '720',
+  xres: '480',
+  yres: '320',
   frameRate: (1000 / 15) + ''
 };
 
@@ -66,6 +66,9 @@ app.get("/video", function(req, res) {
 
   res.sendFile(__dirname + "/public/AudioVideoBuffer.html");
 });
+app.get("/video_demo", function(req, res) {
+  res.sendFile(__dirname + "/public/AudioVideoBuffer2.html");
+});
 app.get("/panel", function(req, res) {
   res.sendFile(__dirname + "/public/watch.html");
 });
@@ -76,6 +79,7 @@ app.get("/browser", function(req, res) {
 app.get("/server", function(req, res) {
   res.sendFile(__dirname + "/public/server.html");
 });
+
 function toArrayBuffer(buf) {
   var ab = new ArrayBuffer(buf.length);
   var view = new Uint8Array(ab);
