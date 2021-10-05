@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>NDI Receiver</title>
+  <meta charset="UTF-8" />
+</head>
+<style media="screen">
+  video {
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
+  }
+</style>
+
+<body>
+  <canvas id="ndiImage" height="720" width="1280"><canvas>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/static/config.js"></script>
+</body>
+
+</html>
+<script>
+  const socket = io.connect("http://localhost:7000");
+  const ndiSocket = io.connect("http://localhost:7001");
+  const ExternalUserId = 'NDIReceiver'
+  const peerConnections = {};
+  const config = turnConfig;
+  const ndiImage = new Image()
+  const canvas =  document.getElementById('ndiImage')
+  const ctx = canvas.getContext('2d')
+
+  ndiSocket.emit('get_image', 'NDIReceiver');
+
+  ndiSocket.on('image', (data)=>{
+    console.log("Received Image data");
+    // ndiImage.src = data
+  })
+
+  ndiImage.onload = function () {
+    ctx.drawImage(ndiImage, 0, 0)
+  }
+
+  socket.emit("browser", ExternalUserId)
+
+  socket.on("browser_added", () => {
+    console.log("Browser Added in server:::::::::::");
+    socket.emit("get_server", ExternalUserId);
+    console.log("Sending get URL request to server:::::::::::");
+  })
+
+  socket.on("server_url", (url) => {
+    console.log("Received URL from server:::::::::::", url);
+    const videoSocket = io.connect(url)
+
+    videoSocket.on("answer", (id, description) => {
+      peerConnections[id].setRemoteDescription(description);
+    });
+
+    videoSocket.on("watcher", id => {
+      const peerConnection = new RTCPeerConnection(config);
+      peerConnections[id] = peerConnection;
+
+      let stream = canvas.captureStream();
+      stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+
+      peerConnection.onicecandidate = event => {
+        if (event.candidate) {
+          videoSocket.emit("candidate", id, event.candidate);
+        }
+      };
+
+      peerConnection
+        .createOffer()
+        .then(sdp => peerConnection.setLocalDescription(sdp))
+        .then(() => {
+          videoSocket.emit("offer", id, peerConnection.localDescription);
+        });
+    });
+
+    videoSocket.on("candidate", (id, candidate) => {
+      peerConnections[id].addIceCandidate(new RTCIceCandidate(candidate));
+    });
+
+    videoSocket.on("disconnectPeer", id => {
+      peerConnections[id].close();
+      delete peerConnections[id];
+    });
+
+    window.onunload = window.onbeforeunload = () => {
+      videoSocket.close();
+    };
+
+
+    // videoSocket.emit("broadcaster");
+
+  })
+
+</script>

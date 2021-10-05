@@ -21,7 +21,7 @@ app.get("/server", function(req, res) {
   res.sendFile(__dirname + "/public/server.html");
 });
 
-const server_list = ['https://stream1.webrtc2ndi.life']
+const server_list = ['http://localhost']
 const browser_list = {}
 
 // SOCKET URLS

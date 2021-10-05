@@ -1,49 +1,109 @@
 #include <napi.h>
 #include <map>
-#include "syncframemanager.h"
-#include "asyncframemanager.h"
+#include "audiomanager.h"
+#include "videomanager.h"
 
-map<string, CChannel*> CChannel::list ; 
+map<string, CChannel*> CChannel::list; 
 
-Napi::Value setFrames(const Napi::CallbackInfo& info) {
+Napi::Value setFrames(const Napi::CallbackInfo& info) 
+{
 
-    if (info.Length() != 4) {
+	Properties properties;
+    Napi::Object frameproperties;
+
+    if (info.Length() < 2) 
+    {
         Napi::Error::New(info.Env(), "Missing Parameters").ThrowAsJavaScriptException();
         return info.Env().Undefined();
     }
-    if (!info[0].IsString()) {
-        Napi::Error::New(info.Env(), "Invalid Mode").ThrowAsJavaScriptException();
+    
+	if (info.Length() == 3 && !(info[2].IsArrayBuffer() || info[2].IsFunction()))
+	{
+		Napi::Error::New(info.Env(), "Invalid Manifest").ThrowAsJavaScriptException();
+		return info.Env().Undefined();
+    }
+
+    if (!info[0].IsString()) 
+    {
+        Napi::Error::New(info.Env(), "Invalid Command").ThrowAsJavaScriptException();
         return info.Env().Undefined();
     }
-    if (!info[1].IsObject()) {
+
+    if (!info[1].IsObject()) 
+    {
         Napi::Error::New(info.Env(), "Invalid Properties").ThrowAsJavaScriptException();
         return info.Env().Undefined();
     }
-    if (!info[2].IsArrayBuffer()) {
-        Napi::Error::New(info.Env(), "Invalid Frame Buffer").ThrowAsJavaScriptException();
-        return info.Env().Undefined();
-    }
-    if (!info[3].IsFunction()) {
-        Napi::Error::New(info.Env(), "Invalid Call Back Method").ThrowAsJavaScriptException();
-        return info.Env().Undefined();
-    }
 
-    Napi::String mode = info[0].As<Napi::String>() ;
-    Napi::Object properties = info[1].As<Napi::Object>() ;
-    Napi::ArrayBuffer framebuffer = info[2].As<Napi::ArrayBuffer>() ;
-    Napi::Function callback = info[3].As<Napi::Function>();
+    frameproperties = info[1].As<Napi::Object>();
+    Napi::Array keys = frameproperties.GetPropertyNames();
 
-    CFrames * frames = new CFrames(properties, framebuffer) ;
-
-    if (mode.Utf8Value()=="async")
+    for(size_t index=0; index < keys.Length(); index++) 
     {
-         CAsyncFrameManager* frameManager = new CAsyncFrameManager(frames, callback) ;
-         frameManager->Queue();
+        std::string key = (static_cast<Napi::Value>(keys[index])).ToString();
+        std::string value = frameproperties.Get(key).ToString();
+        properties[key]  = value;
     }
-    else 
+
+    switch( CUtil::Evaluate(info[0].As<Napi::String>()) )
     {
-        CSyncFrameManager* frameManager = new CSyncFrameManager(frames) ;
-        frameManager->Execute();
+
+        case CreateSendAudioChannel:
+            CAudioManager::CreateSendChannel(properties);
+            break;
+
+        case CreateReceiveAudioChannel:
+            CAudioManager::CreateReceiveChannel(properties);
+            break;
+
+        case DeleteAudioChannel:
+            CAudioManager::DeleteChannel(properties);
+            break;
+
+        case SendAudio:
+        case ReceiveAudio:
+            CAudioManager::Execute(properties, info);
+            break;
+
+//		case DetachAudioBuffer:
+//			CAudioManager::DetachAudioBuffer(properties);
+//			break;
+
+        case AudioChannelControl:
+            CAudioManager::ChannelControl(properties);
+            break;
+
+        case CreateSendVideoChannel:
+            CVideoManager::CreateSendChannel(properties);
+            break;
+
+        case CreateReceiveVideoChannel:
+            CVideoManager::CreateReceiveChannel(properties);
+            break;
+
+        case DeleteVideoChannel:
+            CVideoManager::DeleteChannel(properties);
+            break;
+
+        case SendVideo:
+        case ReceiveVideo:
+            CVideoManager::Execute(properties, info);
+            break;
+
+        case VideoChannelControl:
+            CVideoManager::ChannelControl(properties);
+            break;
+
+//		case DetachVideoBuffer:
+//			CAudioManager::DetachAudioBuffer(properties);
+//			break;
+
+		case Sleep:
+			CUtil::sleep(properties);
+            break;
+
+		default:
+			break;
     }
     return info.Env().Undefined();
 }

@@ -4,92 +4,81 @@
 #include <iostream>
 #include <iterator>
 #include <map>
-#include "audio.h"
-#include "video.h"
+#include "stream.h"
 
 using namespace std;
-
-typedef std::map<std::string, std::string>Properties;
 
 class CChannel
 {
 private:
-    CChannel() {m_sender = nullptr;}
+    CChannel() {m_stream = nullptr;}
     CChannel(const CChannel&) {}
     CChannel& operator = (const CChannel&) { return *this; }
     static map<string, CChannel*> list;
 public:
     
-    static CChannel* GetChannel(string id)
+    static CChannel* get(string id)
     {
-        typename map<string, CChannel*>::const_iterator it = list.find(id) ;
-        return ((it != list.end())?((CChannel*)(it->second)):nullptr) ;
-    }
-
-    static void SetChannel(CChannel* channel, Properties& properties)
-    {
-        channel->m_properties.clear() ;
-        if (channel->m_sender) delete channel->m_sender ;
-
-        channel->m_properties = properties; 
-
-        if (properties.find("type")->second == "audio")
-            channel->m_sender = new CAudio(properties);
-        else
-            channel->m_sender = new CVideo(properties);
-    }
-
-    static void ResetChannel(string id, Properties& properties)
-    {
-        CChannel* channel = GetChannel(id) ;
-        if(channel) { SetChannel(channel, properties); }
+        typename map<string, CChannel*>::const_iterator it = list.find(id);
+        return ((it != list.end())?((CChannel*)(it->second)):nullptr);
     }
 
     static void destroy()
     {
-        typename map<string, CChannel*>::const_iterator it = list.begin() ;
+        typename map<string, CChannel*>::const_iterator it = list.begin();
         for(;it != list.end(); ++it) { delete (*it).second; }
         list.clear();
     }
-    static CChannel* book(Properties& properties)
-    {
-        Properties::const_iterator it = properties.find("id") ;
-        string id = it->second ;
 
-        CChannel* channel = GetChannel(id) ;
-        if(!channel) 
-        {
-            channel = new CChannel();
-            if(channel) {
-                SetChannel(channel, properties);
-                list[id] = channel;
+    static CChannel* book(CStream* stream)
+    {
+        CChannel* channel = nullptr;
+        if(stream) 
+        { 
+            CChannel* channel = get(stream->id());
+            if(!channel) 
+            {
+                status("booking channel ", stream->id());
+                channel = new CChannel();
+                channel->m_stream = stream;
+                list[stream->id()] = channel;
+            }
+            else 
+            {
+                status("booking already done for channel ", stream->id());
             }
         }
         return channel;
     }
+
     static void kick(string id)
     {
-        CChannel* channel = GetChannel(id) ;
+        CChannel* channel = get(id);
         if (channel) 
         {  
-            channel->m_properties.clear() ;
-            if (channel->m_sender) delete channel->m_sender ;
-            delete channel ;  
+            status("kicking out channel ", id);
+            if (channel->m_stream) delete channel->m_stream;
+            delete channel;  
             list.erase(id); 
         }
     }
 
+    static void status(std::string msg, std::string id)
+    {
+        std::cout<<msg<<id<<std::endl;
+    }
+
     CStream * stream()
     {
-        return m_sender ;
+        return m_stream;
     }
+
 protected:
-    CStream* m_sender;
-    std::map<std::string,std::string> m_properties;
+    CStream* m_stream;
     ~CChannel() {}
 };
 
-//map<string, CChannel*> CChannel::list ; 
+//map<string, CChannel*> CChannel::list; 
 
 #endif // CCHANNEL_H
 
