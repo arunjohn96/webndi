@@ -12,7 +12,7 @@ const io = require("socket.io")(server, {
 const addon = require('bindings')('ndi');
 ndi = addon.ndi;
 var videoProperties = {
-  id: 'b001',
+  id: 'v001',
   type: 'video',
   channelName: 'testv',
   xres: '1280',
@@ -26,7 +26,18 @@ const port = process.env.PORT || 8000;
 io.sockets.on("error", e => console.log(e));
 io.sockets.on("connection", socket => {
   socket.on('video frames', video => {
-    var videoFrameIs = new Uint8ClampedArray(video);
+    if (videoProperties.id != video.id){
+      videoProperties.id = video.id
+      videoProperties.channelName = video.channelName
+      videoProperties.type = video.type
+      videoProperties.xres = video.xres
+      videoProperties.yres = video.yres
+      videoProperties.frameRate = video.frameRate
+
+      ndi('create-send-video-channel', videoProperties) ;
+
+    }
+    var videoFrameIs = new Uint8ClampedArray(video.data);
     ndi("send-video", videoProperties, videoFrameIs.buffer);
   });
 });

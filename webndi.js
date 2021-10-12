@@ -17,12 +17,11 @@ ndi = addon.ndi;
 
 
 let broadcaster;
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 9000;
 
 function success(err, id, type) {
   // console.log(`successfully send ${type} frame - [${id}]`) ;
 }
-
 // API URLS
 app.get("/meeting", function(req, res) {
   res.sendFile(__dirname + "/public/broadcast.html");
@@ -68,21 +67,14 @@ io.sockets.on("connection", socket => {
   socket.on("answer", (id, message) => {
     socket.to(id).emit("answer", socket.id, message);
   });
+  socket.on("channelName", (id, message) => {
+    socket.to(id).emit("channelName", socket.id, message);
+  });
   socket.on("candidate", (id, message) => {
     socket.to(id).emit("candidate", socket.id, message);
   });
   socket.on("disconnect", () => {
     socket.to(broadcaster).emit("disconnectPeer", socket.id);
-  });
-
-  socket.on("browser", (ExternalUserID) => {
-    browser_list[ExternalUserID] = socket.id
-    console.log("Browser List:::::::", browser_list);
-  });
-  socket.on("server", () => {
-    var number_of_servers = Object.keys(server_list).length
-    server_list[str(number_of_servers + 1)] = socket.id
-    console.log("Server List:::::::", browser_list);
   });
 });
 

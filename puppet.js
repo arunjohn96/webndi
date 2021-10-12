@@ -39,16 +39,40 @@ const puppeteer = require('puppeteer');
     '--use-mock-keychain',
   ];
   console.log("HERE::::::::::::::");
-  const browser = await puppeteer.launch(
-    {
-  headless: true,
-  args: minimal_args
-}
-  );
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: minimal_args
+  });
+
+  function delay(time) {
+    return new Promise(function(resolve) {
+      setTimeout(resolve, time)
+    });
+  }
+
   const page = await browser.newPage();
-  await page.goto('http://localhost/panel');
+  await page.setViewport({
+    width: 1920,
+    height: 1080
+  })
+  await page.goto('https://stream1.webrtc2ndi.life/video');
   await page.screenshot({
     path: 'example.png'
   });
+  await page.screenshot({
+    path: 'example1.png'
+  });
+  await page.screenshot({
+    path: 'example2.png'
+  });
+  await page.screenshot({
+    path: 'example3.png'
+  });
+
+  await page.click('#startNdiStreaming')
+  console.log('before waiting');
+  // await delay(50000);
+  //console.log('after waiting');
+  // await page.click('#stopNdiStreaming')
   // await browser.close();
 })();

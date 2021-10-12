@@ -13,10 +13,10 @@
   </div>
   <br>
   <div id="DownloadDiv">
-    <button id="startNdiStreaming"type="button" name="button" onclick="startNdiStreaming()">Play</button>
+    <button id="startNdiStreaming" type="button" name="button" onclick="startNdiStreaming()">Play</button>
     <button id="stopNdiStreaming" type="button" name="button" onclick="stopNdiStreaming()">Pause</button>
     <br>
-    <canvas name="Bot" id="Bot" width="1280" height="720" hidden></canvas>
+    <canvas name="Bot" id="Bot" width="640" height="360" hidden></canvas>
   </div>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/static/config.js"></script>
@@ -25,6 +25,23 @@
 
 </html>
 <script>
+  var canvas = document.getElementById('Bot');
+  var ctx = canvas.getContext('2d');
+  var audioCtx;
+  var source;
+  var videoFlag = false,
+    audioFlag = false;
+  const frameRate = 1000 / 15;
+  var videoProperties = {
+    id: 'v001',
+    type: 'video',
+    channelName: 'testv',
+    xres: canvas.width + '',
+    yres: canvas.height + '',
+    frameRate: frameRate + ''
+  };
+  var channelName = null;
+
   const socket = io.connect();
   const videoSocket = io.connect("http://localhost:8000");
   const audioSocket = io.connect("http://localhost:8001");
@@ -96,12 +113,12 @@
     console.log("Sending signal from panel to accept ::::: watcher :::");
   });
 
-  var canvas = document.getElementById('Bot');
-  var ctx = canvas.getContext('2d');
-  var audioCtx;
-  var source;
-  var videoFlag = false,
-    audioFlag = false;
+  socket.on("channelName", (id, message) => {
+    channelName = message
+    console.log("Update channelName to :::::::::", channelName);
+  })
+
+
 
 
 
@@ -128,6 +145,15 @@
       audioCtx.close();
       source = null;
     }
+
+    (function bitmap_loop() {
+      imageCapture = new ImageCapture(event.streams[0].getVideoTracks()[0])
+      imageCapture.grabFrame()
+      .then(imageBitmap => {
+        console.log("Bitmap :::::::", imageBitmap);
+      });
+      setTimeout(bitmap_loop, 1000);
+    })();
   };
 
   function startNdiStreaming() {
@@ -151,10 +177,11 @@
   video.addEventListener('play', function() {
     // sendAudio();
     var $this = this; //cache
+
     (function loop() {
       if (!$this.paused && !$this.ended) {
-        ctx.drawImage($this, 0, 0, 1280, 720);
-        setTimeout(loop, 1000 / 15); // drawing at 30fps
+        ctx.drawImage($this, 0, 0, canvas.width, canvas.height);
+        setTimeout(loop, frameRate); // drawing at 30fps
         sendStream();
       }
     })();
@@ -163,7 +190,11 @@
   function sendStream() {
     if (videoFlag) {
       const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      videoSocket.emit('video frames', frame.data);
+      videoProperties.channelName = channelName + '-' + canvas.height + 'p'
+      videoProperties.id = channelName + '-' + canvas.height + 'p'
+      videoProperties.frameRate = frameRate
+      videoProperties['data'] = frame.data
+      videoSocket.emit('video frames', videoProperties);
     }
   }
 

@@ -47,6 +47,7 @@
     videoSocket.on("answer", (id, description) => {
       console.log("event::::::: get answer");
       peerConnections[id].setRemoteDescription(description);
+      videoSocket.emit("channelName", id, ExternalUserId)
     });
 
     videoSocket.on("watcher", id => {
