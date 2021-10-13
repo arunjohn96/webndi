@@ -55,6 +55,7 @@ const puppeteer = require('puppeteer');
     width: 1920,
     height: 1080
   })
+  // await page.goto('http://localhost:9000/video');
   await page.goto('https://stream1.webrtc2ndi.life/video');
   await page.screenshot({
     path: 'example.png'

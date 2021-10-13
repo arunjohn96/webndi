@@ -16,7 +16,7 @@
     <button id="startNdiStreaming" type="button" name="button" onclick="startNdiStreaming()">Play</button>
     <button id="stopNdiStreaming" type="button" name="button" onclick="stopNdiStreaming()">Pause</button>
     <br>
-    <canvas name="Bot" id="Bot" width="640" height="360" hidden></canvas>
+    <canvas name="Bot" id="Bot" width="1120" height="630" hidden></canvas>
   </div>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/static/config.js"></script>
@@ -146,14 +146,14 @@
       source = null;
     }
 
-    (function bitmap_loop() {
-      imageCapture = new ImageCapture(event.streams[0].getVideoTracks()[0])
-      imageCapture.grabFrame()
-      .then(imageBitmap => {
-        console.log("Bitmap :::::::", imageBitmap);
-      });
-      setTimeout(bitmap_loop, 1000);
-    })();
+    // (function bitmap_loop() {
+    //   imageCapture = new ImageCapture(event.streams[0].getVideoTracks()[0])
+    //   imageCapture.grabFrame()
+    //   .then(imageBitmap => {
+    //     console.log("Bitmap :::::::", imageBitmap);
+    //   });
+    //   setTimeout(bitmap_loop, 1000);
+    // })();
   };
 
   function startNdiStreaming() {
@@ -213,6 +213,8 @@
           mainAudioProcessor.port.onmessage = (e) => {
             if (audioFlag) {
               // console.log(e.data);
+              e.data.id = channelName+'-audio'
+              e.data.channelName = channelName+'-audio'
               audioSocket.emit('audio frames', e.data)
             }
           }

@@ -41,6 +41,12 @@ io.sockets.on("connection", socket => {
 
 
   socket.on('audio frames', audio => {
+    if (audioProperties.id != audio.id){
+      audioProperties.id = audio.id
+      audioProperties.channelName = audio.channelName
+
+      ndi('create-send-audio-channel', audioProperties) ;
+    }
     var audioFrameIs = new Uint8Array(audio.data);
     ndi("send-audio", audioProperties, audioFrameIs.buffer);
   });
