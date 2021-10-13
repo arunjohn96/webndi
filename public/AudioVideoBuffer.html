@@ -182,12 +182,12 @@
       if (!$this.paused && !$this.ended) {
         ctx.drawImage($this, 0, 0, canvas.width, canvas.height);
         setTimeout(loop, frameRate); // drawing at 30fps
-        sendStream();
+        sendStream(channelName);
       }
     })();
   }, 0);
 
-  function sendStream() {
+  function sendStream(channelName) {
     if (videoFlag) {
       const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
       videoProperties.channelName = channelName + '-' + canvas.height + 'p'
