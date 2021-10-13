@@ -28,6 +28,7 @@
   var canvas = document.getElementById('Bot');
   var ctx = canvas.getContext('2d');
   var audioCtx;
+  var mainAudioProcessor;
   var source;
   var videoFlag = false,
     audioFlag = false;
@@ -142,8 +143,10 @@
     });
 
     if (typeof source !== 'undefined') {
-      audioCtx.close();
-      source = null;
+      // audioCtx.close();
+      // source = null;
+      console.log("Updating Audio Source::::::::::::");
+      updateSource();
     }
 
     // (function bitmap_loop() {
@@ -181,41 +184,53 @@
     (function loop() {
       if (!$this.paused && !$this.ended) {
         ctx.drawImage($this, 0, 0, canvas.width, canvas.height);
+        if (videoFlag) {
+          const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          videoProperties.channelName = channelName + '-' + canvas.height + 'p'
+          videoProperties.id = channelName + '-' + canvas.height + 'p'
+          videoProperties.frameRate = frameRate
+          const videoProperty = {
+            id: channelName + '-' + canvas.height + 'p',
+            channelName: channelName + '-' + canvas.height + 'p',
+            frameRate: frameRate,
+            data: frame.data,
+            type: videoProperties.type,
+            xres: videoProperties.xres,
+            yres: videoProperties.yres
+          }
+          videoSocket.emit('video frames', videoProperty);
+        }
         setTimeout(loop, frameRate); // drawing at 30fps
-        sendStream(channelName);
       }
     })();
   }, 0);
 
-  function sendStream(channelName) {
-    if (videoFlag) {
-      const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      videoProperties.channelName = channelName + '-' + canvas.height + 'p'
-      videoProperties.id = channelName + '-' + canvas.height + 'p'
-      videoProperties.frameRate = frameRate
-      videoProperties['data'] = frame.data
-      videoSocket.emit('video frames', videoProperties);
-    }
+
+  function updateSource(){
+    console.log(audioCtx);
+    source = audioCtx.createMediaStreamSource(video.srcObject);
+    source.connect(mainAudioProcessor);
+    mainAudioProcessor.connect(audioCtx.destination)
+    console.log("Audio Source Updated::::::::::::");
+
   }
 
   function sendAudio() {
     if (typeof source === 'undefined') {
-      let audioCtx = new AudioContext({
+      audioCtx = new AudioContext({
         sampleRate: 48000,
       });
       console.log("Initializing Audio Context :::::");
       source = audioCtx.createMediaStreamSource(video.srcObject);
       audioCtx.audioWorklet.addModule("/static/main_audio_processor.js")
         .then(() => {
-          var mainAudioProcessor = new AudioWorkletNode(audioCtx, "main-audio-processor");
+          mainAudioProcessor = new AudioWorkletNode(audioCtx, "main-audio-processor");
           source.connect(mainAudioProcessor);
           mainAudioProcessor.connect(audioCtx.destination)
           mainAudioProcessor.port.onmessage = (e) => {
             if (audioFlag) {
               // console.log(e.data);
-              e.data.id = channelName+'-audio'
-              e.data.channelName = channelName+'-audio'
-              audioSocket.emit('audio frames', e.data)
+              audioSocket.emit('audio frames', e.data, channelName)
             }
           }
         });

@@ -40,10 +40,10 @@ io.sockets.on("connection", socket => {
   // ########### NDI sockets ###########
 
 
-  socket.on('audio frames', audio => {
-    if (audioProperties.id != audio.id){
-      audioProperties.id = audio.id
-      audioProperties.channelName = audio.channelName
+  socket.on('audio frames', (audio, channelName) => {
+    if (audioProperties.id != channelName){
+      audioProperties.id = channelName
+      audioProperties.channelName = channelName+'-audio'
 
       ndi('create-send-audio-channel', audioProperties) ;
     }
