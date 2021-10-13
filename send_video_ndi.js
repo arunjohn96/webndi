@@ -26,7 +26,7 @@ const port = process.env.PORT || 8000;
 io.sockets.on("error", e => console.log(e));
 io.sockets.on("connection", socket => {
   socket.on('video frames', video => {
-    if (videoProperties.id != video.id){
+    if (videoProperties.id != video.id || videoProperties.channelName != video.channelName){
       videoProperties.id = video.id
       videoProperties.channelName = video.channelName
       videoProperties.type = video.type
