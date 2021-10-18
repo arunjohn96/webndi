@@ -15,18 +15,18 @@ var videoProperties = {
   id: 'v001',
   type: 'video',
   channelName: 'testv',
-  xres: '1280',
-  yres: '720',
+  xres: '960',
+  yres: '540',
   frameRate: (1000 / 30) + ''
 };
-ndi('create-send-video-channel', videoProperties) ;
+// ndi('create-send-video-channel', videoProperties) ;
 const port = process.env.PORT || 8000;
 
 // SOCKET URLS
 io.sockets.on("error", e => console.log(e));
 io.sockets.on("connection", socket => {
   socket.on('video frames', video => {
-    if (videoProperties.id != video.id || videoProperties.channelName != video.channelName){
+    if (videoProperties.id != video.id || videoProperties.channelName != video.channelName) {
       videoProperties.id = video.id
       videoProperties.channelName = video.channelName
       videoProperties.type = video.type
@@ -34,7 +34,7 @@ io.sockets.on("connection", socket => {
       videoProperties.yres = video.yres
       videoProperties.frameRate = video.frameRate
 
-      ndi('create-send-video-channel', videoProperties) ;
+      ndi('create-send-video-channel', videoProperties);
 
     }
     var videoFrameIs = new Uint8ClampedArray(video.data);

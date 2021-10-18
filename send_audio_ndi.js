@@ -13,9 +13,9 @@ const addon = require('bindings')('ndi');
 ndi = addon.ndi;
 
 const audioProperties = {
-    id: 'a001',
+    id: '',
     type: 'audio',
-    channelName: 'test-a1',
+    channelName: '',
     sampleRate: '48000',
     noOfChannels: '2',
     bytesPerSample:'4',
@@ -25,7 +25,7 @@ const audioProperties = {
 };
 
 
-ndi('create-send-audio-channel', audioProperties) ;
+// ndi('create-send-audio-channel', audioProperties) ;
 
 const port = process.env.PORT || 8001;
 
