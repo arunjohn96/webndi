@@ -21,8 +21,8 @@ app.get("/server", function(req, res) {
   res.sendFile(__dirname + "/public/server.html");
 });
 
-// const server_list = ['http://localhost:9000']
-const server_list = ['https://stream1.webrtc2ndi.life']
+const server_list = ['http://localhost:9000']
+// const server_list = ['https://stream1.webrtc2ndi.life', 'https://stream2.webrtc2ndi.life']
 const browser_list = {}
 
 // SOCKET URLS
@@ -36,16 +36,37 @@ io.sockets.on("connection", socket => {
     console.log("Sending emit to ::::", browser_list[ExternalUserID]);
     socket.emit("browser_added")
   });
+  socket.on("stopRecording", (id, roomName, eventId, ExternalUserId) => {
+    server_list.forEach((server_url, i) => {
+      http.get(server_url + '/stopRecording', (resp) => {
+        let data = '';
+
+        // A chunk of data has been received.
+        resp.on('data', (chunk) => {
+          data += chunk;
+        });
+
+        // The whole response has been received. Print out the result.
+        resp.on('end', () => {
+          console.log(JSON.parse(data));
+        });
+
+      }).on("error", (err) => {
+        console.log("Error: " + err.message);
+      });
+
+    });
+  });
 
   socket.on("get_server", (ExternalUserId) => {
     index = Object.keys(browser_list).indexOf(ExternalUserId)
-    console.log("External User Id Index:::",index);
-    var j =0;
-    var i =0;
+    console.log("External User Id Index:::", index);
+    var j = 0;
+    var i = 0;
     var server_url;
-    while(i<=index){
-      if (j>=server_list.length){
-        j=0
+    while (i <= index) {
+      if (j >= server_list.length) {
+        j = 0
       }
       server_url = server_list[j]
       console.log(j, server_url);
@@ -55,6 +76,8 @@ io.sockets.on("connection", socket => {
     socket.emit("server_url", server_url)
 
   });
+
+
 });
 
 server.listen(port, () => console.log(`Server is running on port ${port}`));

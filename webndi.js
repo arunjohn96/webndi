@@ -16,7 +16,8 @@ ndi = addon.ndi;
 
 
 
-let broadcaster;
+let broadcaster, clearcheck;
+var endMeetingFlag = false;
 const port = process.env.PORT || 9000;
 
 function success(err, id, type) {
@@ -48,6 +49,11 @@ app.get("/ndi_receiver", function(req, res) {
   res.sendFile(__dirname + "/public/ndi_receiver.html");
 });
 
+app.get("/stopRecording", function(req, res) {
+  endMeetingFlag = true;
+  res.end('success')
+})
+
 
 // SOCKET URLS
 io.sockets.on("error", e => console.log(e));
@@ -70,6 +76,17 @@ io.sockets.on("connection", socket => {
   socket.on("channelName", (id, message) => {
     socket.to(id).emit("channelName", socket.id, message);
   });
+  socket.on("startRecording", (id, roomName, eventId, externalUserID) => {
+    socket.to(id).emit("startRecording", roomName, eventId, externalUserID);
+    endMeetingFlag = false;
+  });
+
+  clearcheck = setInterval(() => {
+    if (endMeetingFlag) {
+      socket.broadcast.emit("stopRecording");
+    }
+  }, 1000);
+
   socket.on("candidate", (id, message) => {
     socket.to(id).emit("candidate", socket.id, message);
   });

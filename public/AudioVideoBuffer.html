@@ -42,6 +42,9 @@
     frameRate: frameRate + ''
   };
   var channelName = 'testv';
+  var RoomName, EventId, ExternalUserID;
+  var recorderFlag = false;
+  var s3UploadFlag = false;
 
   const socket = io.connect();
   const videoSocket = io.connect("http://localhost:8000");
@@ -74,19 +77,26 @@
   let blackSilence = () => new MediaStream([black(), silence()]);
   var dummyStream = blackSilence();
   var video = document.getElementById('VideoSource');
+  var audioStream = new MediaStream([silence()])
 
   video.srcObject = dummyStream;
   video.play()
 
   var stream = canvas.captureStream(30);
-  var recordedChunks = [];
+  var videoDataChunks = [];
+  var audioDataChunks = [];
 
-  mediaRecorder = new MediaRecorder(stream, options);
-  console.log("MediaRecorder Stream ::::::::::::::",stream);
+  videoRecorder = new MediaRecorder(stream, options);
+  console.log("VideoRecorder Stream ::::::::::::::", stream);
   var options = {
     mimeType: "video/webm; codecs=vp9"
   };
-  mediaRecorder.ondataavailable = handleDataAvailable;
+  videoRecorder.ondataavailable = handleVideoDataAvailable;
+
+  audioRecorder = new MediaRecorder(audioStream, {
+    mimeType: "audio/webm;"
+  })
+  audioRecorder.ondataavailable = handleAudioDataAvailable;
 
   socket.on("offer", (id, description) => {
     // if (peerConnection === undefined){
@@ -129,6 +139,39 @@
     channelName = message
     console.log("Update channelName to :::::::::", channelName);
   })
+  socket.on("startRecording", (roomName, eventId, externalUserID) => {
+    RoomName = roomName;
+    EventId = eventId;
+    ExternalUserID = externalUserID;
+    recorderFlag = true;
+    s3UploadFlag = false;
+
+
+    if ((audioRecorder.state != 'recording') && (recorderFlag)) {
+      audioRecorder.start();
+      console.log("Audio Recording started:::::::::::::");
+    }
+    if ((videoRecorder.state != 'recording') && (recorderFlag)) {
+      videoRecorder.start();
+      console.log("Video Recording started:::::::::::::");
+    }
+
+  })
+
+  socket.on("stopRecording", () => {
+
+    if ((audioRecorder.state == 'recording') && (recorderFlag)) {
+      audioRecorder.stop();
+      console.log("Audio Recording stopped:::::::::::::");
+    }
+    if ((videoRecorder.state == 'recording') && (recorderFlag)) {
+      videoRecorder.stop();
+      console.log("Video Recording stopped:::::::::::::");
+    }
+    recorderFlag = false;
+    s3UploadFlag = true;
+
+  })
 
   function handleRemoteStreamAdded(event) {
     console.log('Remote stream added.');
@@ -137,6 +180,22 @@
     event.streams[0].getTracks().forEach((track, i) => {
       console.log(i, "Details of newly added track ::::", track, track.getSettings());
     });
+    audioStream.getTracks().forEach((track, i) => {
+      audioStream.removeTrack(track)
+    });
+    event.streams[0].getAudioTracks().forEach((track, i) => {
+      audioStream.addTrack(track)
+    });
+
+    if (audioRecorder.state == 'recording') {
+      audioRecorder.stop()
+    }
+    audioRecorder = new MediaRecorder(audioStream, {
+      mimeType: "audio/webm;"
+    })
+    audioRecorder.start();
+    audioRecorder.ondataavailable = handleAudioDataAvailable;
+
 
     if (typeof source !== 'undefined') {
       // audioCtx.close();
@@ -149,18 +208,12 @@
   function startNdiStreaming() {
     videoFlag = true
     audioFlag = true
-    if (mediaRecorder.state == "recording") {
-      mediaRecorder.stop();
-    }
-    recordedChunks = []
-    mediaRecorder.start();
     sendAudio();
   }
 
   function stopNdiStreaming() {
     videoFlag = false
     audioFlag = false
-    mediaRecorder.stop();
   }
 
   video.addEventListener('play', function() {
@@ -221,12 +274,28 @@
     }
   }
 
-  function handleDataAvailable(event) {
-    console.log("data-available");
+  function handleVideoDataAvailable(event) {
     if (event.data.size > 0) {
-      recordedChunks.push(event.data);
-      console.log(recordedChunks.length);
-      download();
+      console.log("video data available");
+      videoDataChunks.push(event.data);
+      if (s3UploadFlag) {
+        console.log("startS3VideoUpload");
+        startS3VideoUpload();
+      }
+    } else {
+      // ...
+    }
+
+  }
+
+  function handleAudioDataAvailable(event) {
+    if (event.data.size > 0) {
+      console.log("audio data available");
+      audioDataChunks.push(event.data);
+      if (s3UploadFlag) {
+        console.log("startS3AudioUpload");
+        startS3AudioUpload();
+      }
     } else {
       // ...
     }
@@ -235,6 +304,8 @@
 
   const upload = async function uploadFilesToS3(extension, path, file, fileName) {
     console.log("Initializing upload to s3:::::::::::");
+    // CALL API
+
     // await uploadFilesToS3('webm', 'uploads', file, 'myfile');
     return new Promise(async (resolve, reject) => {
       const bucket = new AWS.S3({
@@ -252,21 +323,36 @@
           console.log("Video uploaded")
         }
         if (err) {
-          console.log("Video uploaded failed")
+          console.log("Video upload failed")
+          console.log(err);
         }
       })
     })
   }
 
-  function download() {
-    var blob = new Blob(recordedChunks, {
+  function startS3VideoUpload() {
+    var blob = new Blob(videoDataChunks, {
       type: "video/webm"
     });
-    let file = new File([blob], 'filename', {
+    var fileName = channelName + '-video'
+    let file = new File([blob], fileName, {
       type: 'video/webm',
       lastModified: Date.now()
     })
 
-    upload('webm', 'single', file, 'myfile');
+    upload('webm', 'single', file, fileName);
+  }
+
+  function startS3AudioUpload() {
+    var blob = new Blob(audioDataChunks, {
+      type: "audio/webm"
+    });
+    var fileName = channelName + '-audio'
+    let file = new File([blob], fileName, {
+      type: 'audio/webm',
+      lastModified: Date.now()
+    })
+
+    upload('webm', 'single', file, fileName);
   }
 </script>
