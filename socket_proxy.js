@@ -14,10 +14,10 @@ app.use('/static', express.static('public'))
 const port = process.env.PORT || 7000;
 
 
-app.get("/browser", function(req, res) {
+app.get("/proxy/browser", function(req, res) {
   res.sendFile(__dirname + "/public/browser.html");
 });
-app.get("/server", function(req, res) {
+app.get("/proxy/server", function(req, res) {
   res.sendFile(__dirname + "/public/server.html");
 });
 
