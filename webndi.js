@@ -51,7 +51,7 @@ app.get("/stream/ndi_receiver", function(req, res) {
 
 app.get("/stopRecording", function(req, res) {
   endMeetingFlag = true;
-  res.end('success')
+  res.end(JSON.stringify({message:'success'}))
 })
 
 
