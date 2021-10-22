@@ -49,7 +49,7 @@ app.get("/stream/ndi_receiver", function(req, res) {
   res.sendFile(__dirname + "/public/ndi_receiver.html");
 });
 
-app.get("/stream/stopRecording", function(req, res) {
+app.get("/stopRecording", function(req, res) {
   endMeetingFlag = true;
   res.end('success')
 })
