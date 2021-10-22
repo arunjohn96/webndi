@@ -81,6 +81,12 @@ io.sockets.on("connection", socket => {
     endMeetingFlag = false;
   });
 
+  socket.on("message", (message)=>{
+    console.log("::::::::::::::");
+    console.log(message);
+    console.log("::::::::::::::");
+  });
+
   clearcheck = setInterval(() => {
     if (endMeetingFlag) {
       socket.broadcast.emit("stopRecording");
