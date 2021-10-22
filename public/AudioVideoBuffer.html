@@ -321,6 +321,7 @@
       bucket.upload(params, async (err, data) => {
         if (data) {
           console.log("Video uploaded")
+          socket.emit('message', fileName+ ' uploaded')
         }
         if (err) {
           console.log("Video upload failed")
