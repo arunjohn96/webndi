@@ -1,6 +1,7 @@
 FROM node:16
 
 COPY ndi/lib/libndi.so.4 /lib/
+COPY ndi/lib/libndi.so.4 /lib/libndi.so.4
 ENV LD_LIBRARY_PATH=/usr/lib/:/lib/
 
 RUN apt-get update && apt-get install -y \
@@ -25,7 +26,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm clean-install
 
 COPY . .
 

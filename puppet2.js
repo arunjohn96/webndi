@@ -39,10 +39,10 @@ const puppeteer = require('puppeteer');
     '--use-mock-keychain',
   ];
   console.log("Launching Headless Browser::::::::::::");
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: minimal_args
-  });
+  // const browser = await puppeteer.launch({
+  //   headless: true,
+  //   args: minimal_args
+  // });
   const browser = await puppeteer.connect({ browserWSEndpoint: 'ws://localhost:3001' });
 
   function delay(time) {
