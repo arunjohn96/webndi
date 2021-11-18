@@ -1,7 +1,7 @@
 FROM node:16
 
 COPY ndi/lib/libndi.so.4 /lib/
-COPY ndi/lib/libndi.so.4 /lib/libndi.so.4
+COPY /lib/x86_64-linux-gnu/libnode.so.64 /lib/libnode.so.64
 ENV LD_LIBRARY_PATH=/usr/lib/:/lib/
 
 RUN apt-get update && apt-get install -y \
