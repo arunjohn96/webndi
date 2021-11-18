@@ -43,6 +43,7 @@ const puppeteer = require('puppeteer');
     headless: true,
     args: minimal_args
   });
+  const browser = await puppeteer.connect({ browserWSEndpoint: 'ws://localhost:3001' });
 
   function delay(time) {
     return new Promise(function(resolve) {

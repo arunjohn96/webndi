@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  socket_proxy:
+    restart: always
+    image: webndi_base
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: socket_proxy
+    command: ['node', 'socket_proxy.js']
+    network_mode: host
+
+  webndi:
+    restart: always
+    image: webndi_base
+    container_name: webndi
+    command: ['node', 'webndi.js']
+    network_mode: host
+
+  ndi_video:
+    restart: always
+    image: webndi_base
+    container_name: ndi_video
+    command: ['node', 'send_video_ndi.js']
+    network_mode: host
+
+  ndi_audio:
+    restart: always
+    image: webndi_base
+    container_name: ndi_audio
+    command: ['node', 'send_audio_ndi.js']
+    network_mode: host
+
+  ndi_chrome:
+    restart: always
+    image: browserless/chrome
+    container_name: ndi_chrome
+    network_mode: host
+    mem_limit: 4096m
+    mem_reservation: 500M
+    cpus: 0.70
+
+  ndi_puppeteer:
+    restart: always
+    image: webndi_base
+    container_name: ndi_puppeteer
+    command: ['node', 'puppet2.js']
+    network_mode: host
+  browserless_nginx :
+    restart: always
+    build:
+      context: Nginx/.
+      dockerfile: Dockerfile
+    image: browserless_nginx
+    container_name: ndi_nginx
+    network_mode: host
