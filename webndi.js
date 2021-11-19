@@ -76,8 +76,8 @@ io.sockets.on("connection", socket => {
   socket.on("channelName", (id, message) => {
     socket.to(id).emit("channelName", socket.id, message);
   });
-  socket.on("startRecording", (id, roomName, eventId, externalUserID) => {
-    socket.to(id).emit("startRecording", roomName, eventId, externalUserID);
+  socket.on("startRecording", (id, roomName, eventId, externalUserID, projectId) => {
+    socket.to(id).emit("startRecording", roomName, eventId, externalUserID, projectId);
     endMeetingFlag = false;
   });
 

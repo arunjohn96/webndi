@@ -42,7 +42,7 @@
     frameRate: frameRate + ''
   };
   var channelName = 'testv';
-  var RoomName, EventId, ExternalUserID;
+  var RoomName, EventId, ExternalUserID, currentRecordingS3Path;
   var recorderFlag = false;
   var s3UploadFlag = false;
 
@@ -151,13 +151,14 @@
     console.log("Update channelName to :::::::::", channelName);
 
   })
-  socket.on("startRecording", (roomName, eventId, externalUserID) => {
+  socket.on("startRecording", (roomName, eventId, externalUserID, projectId) => {
     socket.emit("message", "startRecording received! " + channelName)
     RoomName = roomName;
     EventId = eventId;
     ExternalUserID = externalUserID;
     recorderFlag = true;
     s3UploadFlag = false;
+    currentRecordingS3Path = `project/${projectId}/${eventId}`
 
 
     if ((audioRecorder.state != 'recording') && (recorderFlag)) {
@@ -308,7 +309,7 @@
       videoDataChunks.push(event.data);
       if (s3UploadFlag) {
         console.log("startS3VideoUpload");
-        startS3VideoUpload();
+        startS3VideoUpload(currentRecordingS3Path);
       }
     } else {
       // ...
@@ -322,7 +323,7 @@
       audioDataChunks.push(event.data);
       if (s3UploadFlag) {
         console.log("startS3AudioUpload");
-        startS3AudioUpload();
+        startS3AudioUpload(currentRecordingS3Path);
       }
     } else {
       // ...
@@ -362,7 +363,7 @@
     })
   }
 
-  function startS3VideoUpload() {
+  function startS3VideoUpload(currentRecordingS3Path) {
     var blob = new Blob(videoDataChunks, {
       type: "video/webm"
     });
@@ -372,11 +373,11 @@
       lastModified: Date.now()
     })
 
-    upload('webm', 'single', file, fileName);
+    upload('webm', currentRecordingS3Path, file, fileName);
     socket.emit('message', fileName + ' upload Initialized!')
   }
 
-  function startS3AudioUpload() {
+  function startS3AudioUpload(currentRecordingS3Path) {
     var blob = new Blob(audioDataChunks, {
       type: "audio/webm"
     });
@@ -385,7 +386,7 @@
       type: 'audio/webm',
       lastModified: Date.now()
     })
-    upload('webm', 'single', file, fileName);
+    upload('webm',currentRecordingS3Path , file, fileName);
     socket.emit('message', fileName + ' upload Initialized!')
 
   }
