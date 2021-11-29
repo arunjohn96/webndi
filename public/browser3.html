@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Broadcaster</title>
+  <meta charset="UTF-8" />
+</head>
+
+
+<body>
+  <section class="select">
+    <label for="audioSource">Audio source: </label>
+    <select id="audioSource"></select>
+  </section>
+
+  <section class="select">
+    <label for="videoSource">Video source: </label>
+    <select id="videoSource"></select>
+  </section>
+
+  <video id="SourceVideo" playsinline autoplay muted></video>
+  <br>
+  <button id="endRecording" type="button" name="button" onclick="endRecording()">Stop Recording</button>
+  <button id="grabFrame" type="button" name="button" onclick="getAFrame()">Grab Frame</button>
+  <br>
+  <canvas id="canvas" width="1280" height="720"></canvas>
+  <canvas id="canvas2" width="1280" height="720"></canvas>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/static/config.js"></script>
+</body>
+
+</html>
+<script>
+  // const socket = io.connect("http://localhost:7000");
+  const socket = io.connect();
+  const ExternalUserId = prompt("Enter user name:")
+  const peerConnections = {};
+  const config = turnConfig;
+  var selAudioDevice, selVideoDevice;
+  const ndiStream = new MediaStream()
+
+  function endRecording() {
+    socket.emit("stopRecording", 'id', 'roomName', 'eventId', ExternalUserId)
+  }
+
+
+  socket.emit("browser", ExternalUserId)
+
+  socket.on("browser_added", () => {
+    console.log("Browser Added in server:::::::::::");
+    socket.emit("get_server", ExternalUserId);
+    console.log("Sending get URL request to server:::::::::::");
+  })
+
+  socket.on("answer", (id, description) => {
+    console.log("event::::::: get answer");
+    peerConnections[id].setRemoteDescription(description);
+    socket.emit("channelName", id, ExternalUserId)
+    // socket.emit("startRecording", id, '000', ExternalUserId, '000')
+  });
+
+  socket.on("watcher", id => {
+    console.log("Received info ::::: connect to ID of server ", id);
+    const peerConnection = new RTCPeerConnection(config);
+    peerConnections[id] = peerConnection;
+    console.log(ndiStream.getTracks());
+    ndiStream.getTracks().forEach((track) => {
+      track.stop()
+      ndiStream.removeTrack(track)
+    });
+
+    let audioElement = selAudioDevice;
+    let videoElement = selVideoDevice;
+
+    if (typeof audioElement === 'string' && typeof videoElement === 'string') {
+      console.log("NDI audioElement string", audioElement);
+      console.log("NDI videoElement string", videoElement);
+
+      const constraints = { //: { audio: any: { deviceID: string, exact: boolean }; }
+        audio: {
+          deviceId: audioElement,
+          // exact: true
+        },
+        video: {
+          deviceId: videoElement,
+          exact: true,
+          aspectRatio: 1.777777778,
+        }
+      }
+
+      navigator.mediaDevices.getUserMedia(constraints)
+        .then((stream) => {
+          stream.getTracks().forEach((track) => {
+            ndiStream.addTrack(track)
+          });
+
+          console.log("Stream String");
+          console.log(ndiStream);
+          console.log(ndiStream.getTracks());
+          ndiStream.getTracks().forEach(track => peerConnection.addTrack(track, ndiStream));
+        }).then(() => {
+          peerConnection
+            .createOffer()
+            .then(sdp => peerConnection.setLocalDescription(sdp))
+            .then(() => {
+              socket.emit("offer", id, peerConnection.localDescription);
+              console.log("event::::::: send offer");
+            });
+        })
+        .catch(handleError)
+    } else if (typeof audioElement === 'object' && typeof videoElement === 'object') {
+      console.log("NDI audioElement object", audioElement);
+      console.log("NDI videoElement object", videoElement);
+      const constraints = { //: { audio: any: { deviceID: string, exact: boolean }; }
+        audio: {
+          deviceId: audioElement.getAudioTracks()[0].getSettings().deviceId,
+          exact: true
+        },
+        video: {
+          deviceId: videoElement.getVideoTracks()[0].getSettings().deviceId,
+          exact: true
+        }
+      }
+      navigator.mediaDevices.getUserMedia(constraints)
+        .then((stream) => {
+          console.log("Stream Object");
+          console.log(ndiStream);
+          console.log(ndiStream.getTracks());
+          ndiStream.getTracks().forEach(track => peerConnection.addTrack(track, ndiStream));
+
+        }).then(() => {
+          peerConnection
+            .createOffer()
+            .then(sdp => peerConnection.setLocalDescription(sdp))
+            .then(() => {
+              socket.emit("offer", id, peerConnection.localDescription);
+              console.log("event::::::: send offer");
+            });
+        })
+        .catch(handleError)
+    }
+
+    //
+    // let stream = videoElement.srcObject; //('video-27')
+    // console.log(stream);
+    // stream.getVideoTracks().forEach(track => peerConnection.addTrack(track, stream));
+
+    peerConnection.onicecandidate = event => {
+      if (event.candidate) {
+        console.log("event::::::: got candidate");
+        socket.emit("candidate", id, event.candidate);
+        console.log("event::::::: send candidate", id, event.candidate);
+      }
+    };
+
+  });
+
+  socket.on("candidate", (id, candidate) => {
+    peerConnections[id].addIceCandidate(new RTCIceCandidate(candidate));
+  });
+
+  socket.on("disconnectPeer", id => {
+    peerConnections[id].close();
+    delete peerConnections[id];
+  });
+
+  window.onunload = window.onbeforeunload = () => {
+    socket.close();
+  };
+  // Get camera and microphone
+  const videoElement = document.querySelector("video");
+  const audioSelect = document.querySelector("select#audioSource");
+  const videoSelect = document.querySelector("select#videoSource");
+
+  audioSelect.onchange = getStream;
+  videoSelect.onchange = getStream;
+
+  getStream()
+    .then(getDevices)
+    .then(gotDevices);
+
+  function getDevices() {
+    return navigator.mediaDevices.enumerateDevices();
+  }
+
+  function gotDevices(deviceInfos) {
+    window.deviceInfos = deviceInfos;
+    for (const deviceInfo of deviceInfos) {
+      const option = document.createElement("option");
+      option.value = deviceInfo.deviceId;
+      if (deviceInfo.kind === "audioinput") {
+        option.text = deviceInfo.label || `Microphone ${audioSelect.length + 1}`;
+        audioSelect.appendChild(option);
+      } else if (deviceInfo.kind === "videoinput") {
+        option.text = deviceInfo.label || `Camera ${videoSelect.length + 1}`;
+        videoSelect.appendChild(option);
+      }
+    }
+  }
+
+  function getStream() {
+    console.log("Getting Stream::::::::::");
+    if (window.stream) {
+      window.stream.getTracks().forEach(track => {
+        track.stop();
+      });
+    }
+    const audioSource = audioSelect.value;
+    selAudioDevice = audioSelect.value;
+    const videoSource = videoSelect.value;
+    selVideoDevice = videoSelect.value;
+
+    const constraints = {
+      audio: {
+        deviceId: audioSource ? {
+          exact: audioSource
+        } : undefined,
+
+      },
+      video: {
+        deviceId: videoSource ? {
+          exact: videoSource
+        } : undefined,
+        aspectRatio: 1.777777778,
+        // width: {
+        //   min: 960,
+        //   max: 1440
+        // },
+        // height: {
+        //   min: 720,
+        //   max: 1080
+        // },
+        // frameRate: {
+        //   min: 16,
+        //   max: 30
+        // }
+      }
+    };
+    return navigator.mediaDevices
+      .getUserMedia(constraints)
+      .then(gotStream)
+      .catch(handleError);
+  }
+
+  function gotStream(stream) {
+    window.stream = stream;
+    audioSelect.selectedIndex = [...audioSelect.options].findIndex(
+      option => option.text === stream.getAudioTracks()[0].label
+    );
+    videoSelect.selectedIndex = [...videoSelect.options].findIndex(
+      option => option.text === stream.getVideoTracks()[0].label
+    );
+    videoElement.srcObject = stream;
+    // videoElement.muted = false;
+    socket.emit("broadcaster");
+    console.log("NDI:::: Sending broadcaster::::::: to Server");
+  }
+
+  function handleError(error) {
+    console.error("Error: ", error);
+  }
+
+  function getAFrame() {
+    var track = document.getElementById('SourceVideo').srcObject.getVideoTracks()[0]
+    var imageCapture = new ImageCapture(track);
+    const bitmapPromise = imageCapture.grabFrame()
+      .then((bitmap) => {
+        console.log(":::::::::::", new Uint8Array(bitmap));
+        var canvas = document.getElementById('canvas')
+        let ctx = canvas.getContext('bitmaprenderer');
+        // canvas.getContext('2d').drawImage(bitmap, 0, 0, bitmap.width, bitmap.height);
+        ctx.transferFromImageBitmap(bitmap);
+        canvas.toBlob((blob) => {
+          console.log(blob);
+          var canvas = document.getElementById('canvas2')
+          var url = URL.createObjectURL(blob);
+          var img = new Image()
+          img.src = url
+          img.onload = function() {
+            canvas.getContext('2d').drawImage(img, 0, 0, 1280, 720);
+          };
+        });
+
+      })
+      .catch((err) => {
+        console.log("Error::::");
+      })
+  }
+</script>

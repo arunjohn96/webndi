@@ -40,7 +40,7 @@ app.get("/stream/video", function(req, res) {
   res.sendFile(__dirname + "/public/AudioVideoBuffer3.html");
 });
 app.get("/stream/video_demo", function(req, res) {
-  res.sendFile(__dirname + "/public/AudioVideoBuffer2.html");
+  res.sendFile(__dirname + "/public/browser3.html");
 });
 app.get("/stream/panel", function(req, res) {
   res.sendFile(__dirname + "/public/watch.html");
@@ -56,7 +56,7 @@ app.get("/stopRecording", function(req, res) {
 
 app.get("/proxy/browser", function(req, res) {
   res.sendFile(__dirname + "/public/browser2.html");
-}
+});
 
 // SOCKET URLS
 io.sockets.on("error", e => console.log(e));
