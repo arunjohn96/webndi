@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const dotenv = require('dotenv').config({path:__dirname+'/.env'});
 
 (async () => {
   const minimal_args = [
@@ -41,6 +42,7 @@ const puppeteer = require('puppeteer');
   console.log("Launching Headless Browser::::::::::::");
   const browser = await puppeteer.launch({
     headless: true,
+    ignoreHTTPSErrors: true,
     args: minimal_args
   });
 
@@ -55,9 +57,10 @@ const puppeteer = require('puppeteer');
     width: 1920,
     height: 1080
   })
-  await page.goto('http://localhost:9000/stream/video');
-  console.log("Navigated to Page:::::::::::::");
-  // await page.goto('https://stream1.webrtc2ndi.life/video');
+  // await page.goto('http://localhost:9000/stream/video');
+  var PUPPET_URL = process.env.PUPPET_URL
+  await page.goto(`https://${PUPPET_URL}/stream/video`);
+    console.log("Navigated to Page::::::::::::: ", PUPPET_URL, "IP:::");
   await page.click('#startNdiStreaming')
   console.log("Starting NDI :::::::::::::");
 
