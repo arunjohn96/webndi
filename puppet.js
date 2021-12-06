@@ -1,7 +1,34 @@
+const express = require("express");
+const app = express();
+const http = require("http");
+const server = http.createServer(app);
 const puppeteer = require('puppeteer');
-const dotenv = require('dotenv').config({path:__dirname+'/.env'});
-
-(async () => {
+const port = 9001;
+var browser;
+app.use(express.json())
+app.post('/', function(req, res) {
+  res.setHeader('Content-Type', 'application/json');
+  console.log(req.body);
+  let url = req.body.url
+  console.log(url);
+  startBot(url)
+    .then(() => {
+      res.send({
+        message: 'success',
+        data: req.body
+      })
+    })
+    .catch((err) => {
+      res.send({
+        message: 'failed',
+        error: err
+      })
+    })
+})
+async function startBot(url) {
+  if(typeof browser !== 'undefined'){
+    await browser.close()
+  }
   const minimal_args = [
     '--autoplay-policy=user-gesture-required',
     '--disable-background-networking',
@@ -40,33 +67,21 @@ const dotenv = require('dotenv').config({path:__dirname+'/.env'});
     '--use-mock-keychain',
   ];
   console.log("Launching Headless Browser::::::::::::");
-  const browser = await puppeteer.launch({
+  browser = await puppeteer.launch({
     headless: true,
     ignoreHTTPSErrors: true,
     args: minimal_args
   });
-
-  function delay(time) {
-    return new Promise(function(resolve) {
-      setTimeout(resolve, time)
-    });
-  }
-
   const page = await browser.newPage();
   await page.setViewport({
     width: 1920,
     height: 1080
   })
   // await page.goto('http://localhost:9000/stream/video');
-  var PUPPET_URL = process.env.PUPPET_URL
-  await page.goto(`https://${PUPPET_URL}/stream/video`);
-    console.log("Navigated to Page::::::::::::: ", PUPPET_URL, "IP:::");
+  var PUPPET_URL = url
+  await page.goto(`${PUPPET_URL}/stream/video`);
+  console.log("Navigated to Page::::::::::::: ", PUPPET_URL, "IP:::");
   await page.click('#startNdiStreaming')
   console.log("Starting NDI :::::::::::::");
-
-
-  // await delay(50000);
-  //console.log('after waiting');
-  // await page.click('#stopNdiStreaming')
-  // await browser.close();
-})();
+};
+server.listen(port, () => console.log(`Server is running on port ${port}`));
