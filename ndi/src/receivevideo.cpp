@@ -7,12 +7,12 @@ CReceiveVideo::CReceiveVideo(Properties& properties)
     CUtil::GetProperty(m_channel_name, properties, "channelName");
     CUtil::GetProperty(m_channel_search_max_wait_time, properties, "channelSearchMaxWaitTime");   // 60
     CUtil::GetProperty(m_interval, properties, "pollInterval");   // 0.03
-    
+
     m_receiver = NULL;
     if (!m_interval) m_interval=0.0;
-    
+
     CUtil::log(properties, "initializing receive video");
-    cout<<"  m_channel_search_max_wait_time: "<<m_channel_search_max_wait_time <<endl; 
+    cout<<"  m_channel_search_max_wait_time: "<<m_channel_search_max_wait_time <<endl;
 
     m_receiver = CNdi::CreateReceiver(m_channel_name, m_channel_search_max_wait_time);
     if(!m_receiver) {
@@ -71,12 +71,13 @@ int CReceiveVideo::execute(Properties& properties, const Napi::CallbackInfo& inf
             emitter({callback, video_buffer});
 
             CUtil::sleep(m_interval);
+
 //            if(!video_buffer.IsDetached()) video_buffer.Detach();
             NDIlib_recv_free_video_v2(m_receiver, &video_frame);
+            return 0;
 //	    delete video_data;
-      }    
+      }
     }
 	NDIlib_recv_free_video_v2(m_receiver, &video_frame);
 	return 0 ;
 }
-

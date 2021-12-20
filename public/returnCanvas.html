@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>NDI Return Bot Canvas</title>
+  <meta charset="UTF-8" />
+</head>
+
+
+<body>
+  <canvas id="canvas" width="1280" height="720"></canvas>
+  <br>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/static/config.js"></script>
+</body>
+
+</html>
+<script>
+  // const socket = io.connect("http://localhost:7000");
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+  const socket = io.connect("http://127.0.0.1:9001");
+  const ndiReturnSocket = io.connect();
+
+  const ExternalUserId = 'bot-ndi-return'
+  const peerConnections = {};
+  const config = turnConfig;
+  var startTime = new Date();
+
+  socket.on("answer", (id, description) => {
+    console.log("event::::::: get answer");
+    peerConnections[id].setRemoteDescription(description);
+    socket.emit("channelName", id, ExternalUserId)
+    // socket.emit("startRecording", id, '000', ExternalUserId, '000')
+  });
+
+  socket.on("watcher", id => {
+    console.log("Received info ::::: connect to ID of server ", id);
+    const peerConnection = new RTCPeerConnection(config);
+    peerConnections[id] = peerConnection;
+    window.stream.getVideoTracks().forEach((track, i) => {
+      track.applyConstraints({
+        frameRate: 24
+      })
+    });
+    console.log(window.stream.getTracks());
+
+    peerConnection.addStream(window.stream);
+    peerConnection
+      .createOffer()
+      .then(sdp => peerConnection.setLocalDescription(sdp))
+      .then(() => {
+        socket.emit("offer", id, peerConnection.localDescription);
+        console.log("event::::::: send offer");
+      });
+
+    peerConnection.onicecandidate = event => {
+      if (event.candidate) {
+        console.log("event::::::: got candidate");
+        socket.emit("candidate", id, event.candidate);
+        console.log("event::::::: send candidate", id, event.candidate);
+      }
+    };
+
+  });
+
+  socket.on("candidate", (id, candidate) => {
+    peerConnections[id].addIceCandidate(new RTCIceCandidate(candidate));
+  });
+
+  socket.on("disconnectPeer", id => {
+    peerConnections[id].close();
+    delete peerConnections[id];
+  });
+
+  // var source = new EventSource('/server-sent-events')
+  //
+  // source.addEventListener('message', function(e) {
+  //   console.log("SSE::::::::::", e.data);
+  // }, false)
+  //
+  ndiReturnSocket.emit('ping')
+  ndiReturnSocket.on('pong', (id)=>{
+    console.log("PONG::::::::", id);
+    ndiReturnSocket.emit('ping')
+  })
+  ndiReturnSocket.on('message', data => {
+    console.log("NDI-RETURN-SERVER:::::::::: message:::", data);
+  });
+  ndiReturnSocket.on("ready", () => {
+    console.log("NDI-RETURN-SERVER::::::::::", "NDI Server RECEIVER READY::::::::::::");
+    ndiReturnSocket.emit("hello")
+  });
+  ndiReturnSocket.on("hello", (id) => {
+    console.log("NDI-RETURN-SERVER::::::::::", "Hello from NDI Receiver:::::::::::", id);
+    ndiReturnSocket.emit("ready", ndiReturnSocket.id)
+  });
+
+  ndiReturnSocket.emit("message", "Hello::::::::")
+
+  ndiReturnSocket.on("rgba_receiver", data => {
+    console.log("NDI-RETURN-SERVER::::::::::", "rgba_received::::::");
+    // ctx.clearRect(0, 0, canvas.width, canvas.height)
+    var rgba = new Uint8ClampedArray(data)
+    console.log(rgba);
+    console.log(rgba.length);
+    const image = new ImageData(rgba, 1280, 360)
+    ctx.putImageData(image, 0, 0)
+  });
+  //
+  // var hello_count =0
+  //
+  //
+  // ndiReturnSocket.on('test_hi', (hello_count)=>{
+  //   console.log("NDI-RETURN-SERVER::::::::::","HI::::::", hello_count);
+  // })
+  //
+
+  window.onunload = window.onbeforeunload = () => {
+    socket.close();
+    // ndiReturnSocket.close();
+  };
+  // Get camera and microphone
+  const videoElement = document.querySelector("video");
+
+  getStream()
+
+  function getStream() {
+    console.log("Getting Stream::::::::::");
+    if (window.stream) {
+      window.stream.getTracks().forEach(track => {
+        track.stop();
+      });
+    }
+
+    return gotStream(canvas.captureStream())
+  }
+
+  function gotStream(stream) {
+    window.stream = stream;
+    socket.emit("broadcaster");
+    console.log("NDI:::: Sending broadcaster::::::: to Server");
+  }
+
+  function handleError(error) {
+    console.error("Error: ", error);
+  }
+
+  /* SCORE */
+  var startTime;
+
+
+  function drawElapsedTime() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    var elapsed = parseFloat((new Date() - startTime) / 1000);
+    ctx.beginPath();
+    ctx.rect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "black";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.fillStyle = "red";
+    ctx.font = "34px Verdana"
+    // draw the running time at half opacity
+    ctx.globalAlpha = 1;
+    ctx.fillText(elapsed + " secs", canvas.width / 2, canvas.height / 2);
+    setTimeout(drawElapsedTime, 1000 / 10);
+  }
+  // drawElapsedTime()
+</script>

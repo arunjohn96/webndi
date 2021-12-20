@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>NDI Return Video</title>
+  <meta charset="UTF-8" />
+</head>
+
+<body>
+  <div id="AudioDiv">
+    <video id="VideoSource" width="1280" height="720" autoplay playsinline muted>
+    </video>
+  </div>
+  <br>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/static/config.js"></script>
+</body>
+
+</html>
+<script>
+  const socket = io.connect();
+  let peerConnection;
+  const config = turnConfig;
+  let silence = () => {
+    let ctx = new AudioContext(),
+      oscillator = ctx.createOscillator();
+    let dst = oscillator.connect(ctx.createMediaStreamDestination());
+    oscillator.start();
+    return Object.assign(dst.stream.getAudioTracks()[0], {
+      enabled: false
+    });
+  }
+  let black = ({
+    width = 1280,
+    height = 720
+  } = {}) => {
+    let canvas = Object.assign(document.createElement("canvas"), {
+      width,
+      height
+    });
+    canvas.getContext('2d').fillRect(0, 0, width, height);
+    let stream = canvas.captureStream();
+    return Object.assign(stream.getVideoTracks()[0], {
+      enabled: false
+    });
+  }
+  let blackSilence = () => new MediaStream([black(), silence()]);
+  var dummyStream = blackSilence();
+  var video = document.getElementById('VideoSource');
+  var audioStream = new MediaStream([silence()])
+
+  video.srcObject = dummyStream;
+  video.play()
+
+
+  socket.on("offer", (id, description) => {
+    // if (peerConnection === undefined){
+    socket.emit("message", "Offer Received from ID " + id)
+    peerConnection = new RTCPeerConnection(config);
+    // }
+
+    peerConnection
+      .setRemoteDescription(description)
+      .then(() => peerConnection.createAnswer())
+      .then(sdp => peerConnection.setLocalDescription(sdp))
+      .then(() => {
+        socket.emit("answer", id, peerConnection.localDescription);
+        socket.emit("message", "Answer sent to ID " + id)
+
+      });
+    peerConnection.ontrack = handleRemoteStreamAdded
+    peerConnection.onicecandidate = event => {
+      if (event.candidate) {
+        socket.emit("message", "IceCandidate received from ID " + id)
+        socket.emit("candidate", id, event.candidate);
+        socket.emit("message", "IceCandidate send to ID " + id)
+
+      }
+    };
+  });
+
+  socket.on("candidate", (id, candidate) => {
+    socket.emit("message", "IceCandidate added to config from ID " + id)
+    peerConnection
+      .addIceCandidate(new RTCIceCandidate(candidate))
+      .catch(e => console.error(e));
+  });
+
+  socket.on("connect", () => {
+    console.log("Connected to socket:::::::::::::::::");
+    socket.emit("watcher");
+    socket.emit("message", "Senting out watcher message when socket connected!")
+
+  });
+
+  socket.on("broadcaster", () => {
+    socket.emit("message", "broadcaster signal received!")
+    console.log("Got an incoming connection::::: broadcaster :::");
+    socket.emit("watcher");
+    socket.emit("message", "Senting out watcher signal!")
+
+    console.log("Sending signal from panel to accept ::::: watcher :::");
+  });
+
+  socket.on("channelName", (id, message) => {
+    channelName = message
+    socket.emit("message", "Updated channelName to ::::::::: " + channelName)
+    console.log("Update channelName to :::::::::", channelName);
+
+  })
+
+  function handleRemoteStreamAdded(event) {
+    console.log('Remote stream added.');
+    video.srcObject = event.streams[0];
+    video.play()
+    // video.muted = false
+
+  };
+</script>

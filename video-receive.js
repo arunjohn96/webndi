@@ -97,7 +97,7 @@ io.sockets.on("connection", socket => {
       // some(data)
       socket.emit('message', "HAI!!")
       socket.emit('rgba_receiver', videoFrameIs.buffer)
-      
+
       console.log("recieve::::::::::::");
     });
     socket.emit('message', "ready received on server :::")
@@ -107,7 +107,7 @@ io.sockets.on("connection", socket => {
     var i = 0;
     setInterval(() => {
       ndi('receive-video', videoProperties, emitter.emit.bind(emitter))
-    })
+    },1000)
     console.log("CREATE_RECEIVE_VIDEO_CHANNEL2::::::::::::::::");
 
 
