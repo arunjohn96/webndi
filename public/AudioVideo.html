@@ -21,7 +21,7 @@
 
   </html>
   <script>
-    const socket = io.connect();
+    const socket = io.connect({path: '/ndi_return/sender'});
     var canvas = document.getElementById('Bot');
     var ctx = canvas.getContext('2d');
     var video = document.getElementById('VideoSource');
