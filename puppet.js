@@ -26,6 +26,7 @@ app.post('/bot/url', function(req, res) {
     })
 })
 async function startBot(url) {
+  console.log(browser);
   if(typeof browser !== 'undefined'){
     await browser.close()
   }

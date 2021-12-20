@@ -19,12 +19,33 @@ var videoProperties = {
   yres: '540',
   frameRate: (1000 / 30) + ''
 };
+const audioProperties = {
+    id: '',
+    type: 'audio',
+    channelName: '',
+    sampleRate: '48000',
+    noOfChannels: '2',
+    bytesPerSample:'4',
+    webFrameRate: '45',
+    webChannelStride: '128',
+    ndiChannelStride: '48000'
+  };
 // ndi('create-send-video-channel', videoProperties) ;
 const port = process.env.PORT || 8000;
-
 // SOCKET URLS
 io.sockets.on("error", e => console.log(e));
 io.sockets.on("connection", socket => {
+  socket.on('audio frames', (audio, channelName) => {
+    if (audioProperties.id != channelName) {
+      audioProperties.id = channelName
+      audioProperties.channelName = channelName
+
+      ndi('create-send-audio-channel', audioProperties);
+    }
+    var audioFrameIs = new Uint8Array(audio.data);
+    ndi("send-audio", audioProperties, audioFrameIs.buffer);
+  });
+
   socket.on('video frames', video => {
     if (videoProperties.id != video.id || videoProperties.channelName != video.channelName) {
       videoProperties.id = video.id

@@ -43,7 +43,7 @@ io.sockets.on("connection", socket => {
   socket.on('audio frames', (audio, channelName) => {
     if (audioProperties.id != channelName){
       audioProperties.id = channelName
-      audioProperties.channelName = channelName+'-audio'
+      audioProperties.channelName = channelName
 
       ndi('create-send-audio-channel', audioProperties) ;
     }

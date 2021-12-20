@@ -7,6 +7,7 @@
 #include <Processing.NDI.Send.h>
 #include <Processing.NDI.Lib.cplusplus.h>
 
+#include "ndi.h"
 #include "channel.h"
 #include <iostream>
 

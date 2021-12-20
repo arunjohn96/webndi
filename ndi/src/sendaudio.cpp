@@ -15,11 +15,6 @@ CSendAudio::CSendAudio(Properties& properties)
     m_no_of_web_frames = 0;
     no_of_samples_in_ndi_channel_frame = 0;
 
-    NDIlib_send_create_t descriptor;
-    descriptor.p_ndi_name = m_channel_name.c_str();
-    descriptor.clock_audio = true;
-    m_sender = NULL;
-    
     CUtil::log(properties, "initializing audio");
     cout<<"  m_sample_rate: "<<m_sample_rate
         <<endl<<"  m_no_of_channels: "<<m_no_of_channels
@@ -30,11 +25,10 @@ CSendAudio::CSendAudio(Properties& properties)
         <<endl<<"  ndi buffer size(float): "<<m_ndi_channel_stride * m_no_of_channels
         <<endl; 
 
-    if (NDIlib_initialize())
-    {
-        m_sender = NDIlib_send_create(&descriptor);
-        CUtil::log(properties, "created sender for audio");
-
+	m_sender = CNdi::CreateSender(m_channel_name) ;
+	if (m_sender)
+	{
+        CUtil::log(properties, "Created sender for audio");
         frame.sample_rate             = m_sample_rate;                              // 48000
         frame.no_channels             = m_no_of_channels;                           // 2
         frame.no_samples              = m_ndi_channel_stride;                       // 375 * 128
@@ -42,7 +36,7 @@ CSendAudio::CSendAudio(Properties& properties)
         frame.p_data                  = (float*)malloc( m_ndi_channel_stride * m_no_of_channels * sizeof(float));
         p_ndi_channel                 = (float*)((uint8_t*)frame.p_data);
         SetFrame();
-    }
+	}
     else
         CUtil::log(properties, "failed sender creation for audio") ;
 
@@ -69,7 +63,7 @@ int CSendAudio::command(Properties& properties)
     return 0;
 }
 
-int CSendAudio::execute(Properties& properties, const Napi::CallbackInfo& info)
+int CSendAudio::execute(Properties& properties, const Napi::CallbackInfo& info)
 {
     if (!m_sender) return 0;
 

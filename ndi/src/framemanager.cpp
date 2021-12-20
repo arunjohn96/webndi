@@ -1,9 +1,10 @@
 #include <napi.h>
-#include <map>
 #include "audiomanager.h"
 #include "videomanager.h"
 
 map<string, CChannel*> CChannel::list; 
+map<string, NDIlib_send_instance_t> CNdi::lst_sender;
+map<string, NDIlib_recv_instance_t> CNdi::lst_receiver;
 
 Napi::Value setFrames(const Napi::CallbackInfo& info) 
 {

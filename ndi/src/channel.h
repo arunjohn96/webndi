@@ -42,6 +42,7 @@ public:
                 channel = new CChannel();
                 channel->m_stream = stream;
                 list[stream->id()] = channel;
+                status("successfully booked a channel for ", stream->id());
             }
             else 
             {

@@ -14,15 +14,12 @@ CReceiveVideo::CReceiveVideo(Properties& properties)
     CUtil::log(properties, "initializing receive video");
     cout<<"  m_channel_search_max_wait_time: "<<m_channel_search_max_wait_time <<endl; 
 
-    if (NDIlib_initialize())
-    {
-        m_receiver = CNdi::CreateReceiver(m_channel_name, m_channel_search_max_wait_time);
-        if(!m_receiver) {
-           CUtil::log(properties, "failed receiver creation for video") ;
-        }
-        else{
-           CUtil::log("successfully initialized receiver");
-        }
+    m_receiver = CNdi::CreateReceiver(m_channel_name, m_channel_search_max_wait_time);
+    if(!m_receiver) {
+       CUtil::log(properties, "failed receiver creation for video") ;
+    }
+    else{
+       CUtil::log("successfully initialized receiver");
     }
 
 }

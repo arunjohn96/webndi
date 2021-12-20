@@ -8,19 +8,15 @@ CSendVideo::CSendVideo(Properties& properties)
     CUtil::GetProperty(m_yres, properties, "yres");
     CUtil::GetProperty(m_framerate, properties, "frameRate");
 
-    NDIlib_send_create_t descriptor;
-    descriptor.p_ndi_name = m_channel_name.c_str();
-    m_sender = NULL;
-
     CUtil::log(properties, "initializing audio");
     cout<<"  m_xres: "<<m_xres
         <<endl<<"  m_yres: "<<m_yres
         <<endl<<"  m_framerate: "<<m_framerate
         <<endl; 
 
-    if (NDIlib_initialize())
-    {
-        m_sender = NDIlib_send_create(&descriptor);
+	m_sender = CNdi::CreateSender(m_channel_name) ;
+	if (m_sender)
+	{
         CUtil::log(properties, "created sender for video");
 
         frame.xres = m_xres;

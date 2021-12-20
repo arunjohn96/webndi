@@ -8,13 +8,13 @@
 
   <body>
     <div id="AudioDiv">
-      <video id="VideoSource" src="/static/video.webm" width="1280" height="720" loop controls>
+      <video id="VideoSource" src="/static/video.webm" width="1280" height="720" loop controls autoplay muted>
       </video>
     </div>
     <br>
     <div id="DownloadDiv">
-      <canvas name="Bot" id="Bot" width="1280" height="720" hidden></canvas>
-      <a href="javascript:void(0)" download="data.raw" hidden>Download Raw Data</a>
+      <canvas name="Bot" id="Bot" width="1280" height="720"></canvas>
+      <!-- <a href="javascript:void(0)" download="data.raw">Download Raw Data</a> -->
     </div>
     <script src="/socket.io/socket.io.js"></script>
   </body>
@@ -28,54 +28,66 @@
     var audioCtx;
     var source;
 
-    video.addEventListener('loadedmetadata', function() {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-    });
+
+    ctx.beginPath();
+    ctx.rect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "black";
+    ctx.fill();
 
     video.addEventListener('play', function() {
       // sendAudio();
       var $this = this; //cache
+
       (function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (!$this.paused && !$this.ended) {
-          ctx.drawImage($this, 0, 0);
-          setTimeout(loop, 1000 / 30); // drawing at 30fps
-          sendStream();
-          // console.log("send stream");
+          ctx.drawImage($this, 0, 0, canvas.width, canvas.height);
+          const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const videoProperty = {
+            id: 'channelName' + '-' + canvas.height + 'p',
+            channelName: 'channelName' + '-' + canvas.height + 'p',
+            type: 'video',
+            frameRate: (1000 / 1) + '',
+            xres: '' + canvas.width,
+            yres: '' + canvas.height,
+            data: frame.data,
+          }
+          socket.emit('video frames', videoProperty);
+          setTimeout(loop, 1000 / 10); // drawing at 30fps
         }
       })();
     }, 0);
 
-    function sendStream() {
-      const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      socket.emit('video frames', {
-        'id': 'Bot'.concat(canvas.width),
-        'channelName': 'Bot'.concat(canvas.width),
-        'height': canvas.height,
-        'width': canvas.width,
-        'frameRate': 30,
-        'data': frame.data
-      });
-    }
-
-    function sendAudio(){
-      console.log("Audio Function");
-      audioCtx = new(AudioContext || webkitAudioContext)({
-         sampleRate: 48000,
-       });
-      source = audioCtx.createMediaElementSource(video);
-      audioCtx.audioWorklet.addModule("/static/main_audio_processor.js")
-        .then(() => {
-          mainAudioProcessor = new AudioWorkletNode(audioCtx, "main-audio-processor");
-          mainAudioProcessor.connect(audioCtx.destination)
-          source.connect(mainAudioProcessor);
-          mainAudioProcessor.port.onmessage = (e) => {
-            // console.log("msg");
-            // socket.emit('audio frames', e.data.audio_left.buffer)
-          }
-          // mainAudioProcessor.connect(audioCtx.destination);
-        })
-    }
+    // function sendStream() {
+    //   const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    //   socket.emit('video frames', {
+    //     'id': 'Bot'.concat(canvas.width),
+    //     'channelName': 'Bot'.concat(canvas.width),
+    //     'height': canvas.height,
+    //     'width': canvas.width,
+    //     'frameRate': 30,
+    //     'data': frame.data
+    //   });
+    // }
+    //
+    // function sendAudio() {
+    //   console.log("Audio Function");
+    //   audioCtx = new(AudioContext || webkitAudioContext)({
+    //     sampleRate: 48000,
+    //   });
+    //   source = audioCtx.createMediaElementSource(video);
+    //   audioCtx.audioWorklet.addModule("/static/main_audio_processor.js")
+    //     .then(() => {
+    //       mainAudioProcessor = new AudioWorkletNode(audioCtx, "main-audio-processor");
+    //       mainAudioProcessor.connect(audioCtx.destination)
+    //       source.connect(mainAudioProcessor);
+    //       mainAudioProcessor.port.onmessage = (e) => {
+    //         // console.log("msg");
+    //         // socket.emit('audio frames', e.data.audio_left.buffer)
+    //       }
+    //       // mainAudioProcessor.connect(audioCtx.destination);
+    //     })
+    // }
 
     // var download = document.querySelector("a[ download ]");
     // var downloadUrl = null;

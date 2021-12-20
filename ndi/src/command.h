@@ -1,6 +1,8 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
+#include <map>
+
 enum Command {
 	InvalidCommand,                          //  0
 	CreateSendAudioChannel,                  //  1
