@@ -6,7 +6,7 @@ const puppeteer = require('puppeteer');
 const port = 9004;
 var browser;
 app.use(express.json())
-app.post('/bot/url', function(req, res) {
+app.post('/ndi_return/bot/url', function(req, res) {
   res.setHeader('Content-Type', 'application/json');
   console.log(req.body);
   let url = req.body.url
