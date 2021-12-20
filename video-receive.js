@@ -13,7 +13,7 @@ const io = require("socket.io")(server, {
 });
 const addon = require('bindings')('ndi');
 app.use('/static', express.static('public'))
-app.get("/ndi_return/receiver", function(req, res) {
+app.get("/ndi_return/client/receiver", function(req, res) {
   res.sendFile(__dirname + "/public/returnCanvas.html");
 });
 

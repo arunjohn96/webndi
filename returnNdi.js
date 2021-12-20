@@ -24,7 +24,7 @@ var videoProperties = {
 
 var broadcaster = false;
 
-const port = process.env.PORT || 9001;
+const port = process.env.PORT || 9002;
 // API URLS
 app.get("/ndi_return/video", function(req, res) {
   res.sendFile(__dirname + "/public/returnVideo.html");
