@@ -20,7 +20,7 @@
   var canvas = document.getElementById('canvas');
   var ctx = canvas.getContext('2d');
   // const socket = io.connect("http://127.0.0.1:9002");
-  const socket = io.connect("https://stream2.webrtc2ndi.life/ndi_return/client/receiver");
+  const socket = io.connect();
   const ndiReturnSocket = io.connect();
 
   const ExternalUserId = 'bot-ndi-return'
