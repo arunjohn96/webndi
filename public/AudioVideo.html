@@ -53,7 +53,7 @@
             data: frame.data,
           }
           socket.emit('video frames', videoProperty);
-          setTimeout(loop, 2000); // drawing at 30fps
+          setTimeout(loop, 1000/10); // drawing at 30fps
         }
       })();
     }, 0);
