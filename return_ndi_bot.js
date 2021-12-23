@@ -82,7 +82,5 @@ async function startBot(url) {
   var PUPPET_URL = url
   await page.goto(`${PUPPET_URL}`);
   console.log("Navigated to Page::::::::::::: ", PUPPET_URL, "IP:::");
-  await page.click('#startNdiStreaming')
-  console.log("Starting NDI :::::::::::::");
 };
 server.listen(port, () => console.log(`Server is running on port ${port}`));
