@@ -26,6 +26,7 @@ var broadcaster = false;
 
 const port = process.env.PORT || 9002;
 // API URLS
+app.use('/static', express.static('public'))
 app.get("/ndi_return/video", function(req, res) {
   res.sendFile(__dirname + "/public/returnVideo.html");
 });
