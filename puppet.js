@@ -80,7 +80,7 @@ async function startBot(url) {
   })
   // await page.goto('http://localhost:9000/stream/video');
   var PUPPET_URL = url
-  await page.goto(`${PUPPET_URL}/stream/video`);
+  await page.goto(`${PUPPET_URL}`);
   console.log("Navigated to Page::::::::::::: ", PUPPET_URL, "IP:::");
   await page.click('#startNdiStreaming')
   console.log("Starting NDI :::::::::::::");
