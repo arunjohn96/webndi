@@ -16,7 +16,7 @@
     <button id="startNdiStreaming" type="button" name="button" onclick="startNdiStreaming()">Play</button>
     <button id="stopNdiStreaming" type="button" name="button" onclick="stopNdiStreaming()">Pause</button>
     <br>
-    <canvas name="Bot" id="Bot" width="1088" height="612" hidden></canvas>
+    <canvas name="Bot" id="Bot" width="1088" height="612"></canvas>
   </div>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/static/config.js"></script>
@@ -30,14 +30,65 @@
   let peerConnection;
   var videoFlag = false;
   var audioFlag = false;
+  const queryString = window.location.search;
+  console.log("URL:::::::::::", queryString);
+  const urlParams = new URLSearchParams(queryString);
+  for (const key of urlParams.keys()) console.log("URL_PARAM::::", key);
   var canvas = document.getElementById('Bot');
   var ctx = canvas.getContext('2d');
+
+  if (urlParams.has('canvasWidth') && urlParams.has('canvasHeight')) {
+    // try {
+    let canvasH = parseInt(urlParams.get('canvasHeight'))
+    let canvasW = parseInt(urlParams.get('canvasWidth'))
+
+    if (!(isNaN(canvasH) && isNaN(canvasW))) {
+      canvas.width = canvasW
+      canvas.height = canvasH
+      console.log("CANVAS DIMENSIONS UPDATED::::::", canvas.width, canvas.height);
+    } else {
+      canvas.width = 1088
+      canvas.height = 612
+      console.log("CANVAS DIMENSIONS default::::::", canvas.width, canvas.height);
+    }
+
+  }
+
   var channelName = 'testv';
+  var channelId = channelName+canvas.width;
   var frameRate = 1000 / 16;
+  if (urlParams.has('frameRate')) {
+    // try {
+    let fRate = 1000/ parseInt(urlParams.get('frameRate'))
+
+    if (!(isNaN(fRate) )) {
+      frameRate = fRate
+      console.log("FRAMERATE UPDATED::::::",1000/frameRate);
+    } else {
+      frameRate = 1000/16
+      console.log("FRAMERATE default::::::", 1000/frameRate);
+    }
+
+  }
+  if (urlParams.has('channelName')) {
+    // try {
+    let cName = urlParams.get('channelName')
+
+    if (!(cName==="")) {
+      channelName = cName
+      channelId = channelName+canvas.width
+      console.log("CHANNEL-NAME UPDATED::::::", channelName);
+    } else {
+      channelName = 'testv';
+      channelId = channelName+canvas.width
+      console.log("CHANNEL-NAME default::::::");
+    }
+
+  }
   var videoProperties = {
-    id: 'v001',
+    id: channelId,
     type: 'video',
-    channelName: 'testv',
+    channelName: channelName,
     xres: canvas.width + '',
     yres: canvas.height + '',
     frameRate: frameRate + ''
@@ -174,7 +225,7 @@
           videoProperties.channelName = channelName
           videoProperties.frameRate = frameRate
           const videoProperty = {
-            id: channelName + '-v',
+            id: channelId + '-v',
             channelName: channelName,
             frameRate: frameRate,
             data: frame.data,
