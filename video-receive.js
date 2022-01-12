@@ -6,73 +6,65 @@ const http = require("http");
 const server = http.createServer(app);
 const fs = require('fs')
 const io = require("socket.io")(server, {
-  cors: {
-    origin: '*',
-  },
-  maxHttpBufferSize: 1e8
+  path: '/ndi_return/client/socket.io'
 });
 const addon = require('bindings')('ndi');
+app.use('/static', express.static('public'))
+ndi = addon.ndi;
+const port = 7001;
+const videoProperties = {
+  id: 'x003',
+  type: 'video',
+  channelName: 'test-v1',
+  channelSearchMaxWaitTime: '25',
+  command: 'stop',
+  pollInterval: '0'
+};
+
+const emitter = new events.EventEmitter();
+
+app.use(express.json())
+app.post('/ndi_return/client/receiver', function(req, res) {
+  res.setHeader('Content-Type', 'application/json');
+  console.log(req.body);
+  let channelName = req.body.channelName
+  console.log(channelName);
+  videoProperties.channelName = channelName
+  videoProperties.id = channelName+'-return-id'
+  initializeReturnFeed(videoProperties)
+    .then(() => {
+      res.send({
+        message: 'success',
+        data: req.body
+      })
+    })
+    .catch((err) => {
+      res.send({
+        message: 'failed',
+        error: err
+      })
+    })
+})
+
 app.use('/static', express.static('public'))
 app.get("/ndi_return/client/receiver", function(req, res) {
   res.sendFile(__dirname + "/public/returnCanvas.html");
 });
 
-const frameData = {
-  data: null
+function message(msg) {
+  console.log(msg)
 }
-app.get('/server-sent-events', function(req, res) {
-  // emitter.on('receive', (data) => {
-  //   console.log("return frame:::", id);
-  //   videoFrameIs = new Uint8ClampedArray(data);
-  //   console.log(videoFrameIs.length);
-  //   // some(data)
-  //   console.log("recieve::::::::::::");
-  // });
 
-  var number = 0;
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive'
-  });
-
-  var interval = setInterval(function() {
-    data = "Real-Time Update " + number;
-    console.log("SENT: " + data);
-    res.write("data: " + data + "\n\n")
-    number++;
-  }, 1000);
-
-  // close
-  res.on('close', () => {
-    clearInterval(interval);
-    res.end();
-  });
-})
-
-ndi = addon.ndi;
-const port = 7001;
-
-const videoProperties = {
-  id: 'channelName-720p',
-  type: 'video',
-  channelName: 'channelName-720p',
-  channelSearchMaxWaitTime: '60',
-  command: 'stop'
-};
-
-const emitter = new events.EventEmitter();
-// Create Event Target Group at Client Level
-//  Listen to events emitted from Server
-
-var videoFrameIs;
-var ndiSocket = false;
-
-io.sockets.on("error", e => console.log(e));
-
+function capture(data) {
+  var videoFrameIs = new Uint8Array(data);
+  var rgbaFrame = new Uint8Array(videoFrameIs.byteLength)
+  rgbaFrame.set(videoFrameIs)
+  emitter.emit('rgba', rgbaFrame)
+}
 
 io.sockets.on("connection", socket => {
   ndiSocket = socket;
+
   socket.emit("ready")
   socket.on('ping', () => {
     console.log('PING::::::::::');
@@ -90,26 +82,13 @@ io.sockets.on("connection", socket => {
   socket.on("ready", (id) => {
     console.log("::::::::::::::::::::::::::::::", id);
     socket.to(id).emit('message', 'hai!!!')
-    emitter.on('receive', (data) => {
-      console.log("return frame:::", id);
-      videoFrameIs = new Uint8ClampedArray(data);
-      console.log(videoFrameIs.length);
-      // some(data)
-      socket.emit('message', "HAI!!")
-      socket.emit('rgba_receiver', videoFrameIs.buffer)
 
-      console.log("recieve::::::::::::");
-    });
     socket.emit('message', "ready received on server :::")
 
-    ndi('create-receive-video-channel', videoProperties);
-    console.log("CREATE_RECEIVE_VIDEO_CHANNEL::::::::::::::::");
-    var i = 0;
-    setInterval(() => {
-      ndi('receive-video', videoProperties, emitter.emit.bind(emitter))
-    },1000)
-    console.log("CREATE_RECEIVE_VIDEO_CHANNEL2::::::::::::::::");
-
+    // initializeReturnFeed(videoProperties);
+    emitter.on('rgba', (data) => {
+      socket.emit('rgba_receiver', data.buffer)
+    });
 
   });
 
@@ -119,10 +98,15 @@ io.sockets.on("connection", socket => {
 
 })
 
+async function initializeReturnFeed(videoProperties) {
+  ndi('create-receive-video-channel', videoProperties);
+  console.log("CREATE_RECEIVE_VIDEO_CHANNEL::::::::::::::::");
+  ndi('receive-video', videoProperties, message, capture);
+}
 
-//
-// 1. Global variable as object
-// 2. Events Client Library
-// 3. Socket SetInterval
-// 4. Server Canvas Processing
 server.listen(port, () => console.log(`Server is running on port ${port}`));
+
+
+/*
+ndi('receive-video', videoProperties, message, emitter.emit.bind(emitter)) ;
+*/

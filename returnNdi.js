@@ -7,8 +7,10 @@ const io = require("socket.io")(server, {
   cors: {
     origin: '*',
   },
-  maxHttpBufferSize: 1e8
+  maxHttpBufferSize: 1e8,
+  path:'/ndi_return/socket.io'
 });
+
 app.use('/static', express.static('public'))
 const addon = require('bindings')('ndi');
 ndi = addon.ndi;
@@ -37,14 +39,18 @@ app.get("/ndi_return/sender", function(req, res) {
 // SOCKET URLS
 io.sockets.on("error", e => console.log(e));
 io.sockets.on("connection", socket => {
+  console.log("Sending Hello::::");
+  socket.emit('message', 'Hello')
 
   // ########### Webrtc Sockets ##########
   socket.on("broadcaster", () => {
     broadcaster = socket.id;
+    console.log("BROADCASTER::::::::::");
     socket.broadcast.emit("broadcaster");
   });
   socket.on("watcher", () => {
     if (broadcaster) {
+      console.log("WATCHER:::::::::::");
       socket.to(broadcaster).emit("watcher", socket.id);
     }
   });
