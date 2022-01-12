@@ -53,7 +53,7 @@ int CReceiveVideo::execute(uint8_t*& buffer, size_t& bsize)
 	frame_type = NDIlib_recv_capture_v2(m_receiver, &video_frame, nullptr, nullptr, 1000);
     if(NDIlib_frame_type_video==frame_type)
     {
-		// cout << "xres:"<<video_frame.xres<<" yres:"<<video_frame.yres<<" Type:" << getVideoType(video_frame.FourCC) << endl ;
+		cout << "xres:"<<video_frame.xres<<" yres:"<<video_frame.yres<<" Type:" << getVideoType(video_frame.FourCC) << endl ;
 	    bsize = video_frame.yres * video_frame.line_stride_in_bytes ;
         buffer = (uint8_t*)malloc(bsize+1);
         memcpy(buffer, video_frame.p_data, bsize);

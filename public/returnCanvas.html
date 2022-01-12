@@ -8,9 +8,9 @@
 
 
 <body>
-  <canvas id="canvas" width="1088" height="612"></canvas>
+  <canvas id="canvas" width="640" height="360"></canvas>
   <br>
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="/ndi_return/socket.io/socket.io.js"></script>
   <script src="/static/config.js"></script>
 </body>
 
@@ -117,7 +117,7 @@
     console.log("NDI-RETURN-SERVER::::::::::", "rgba_received::::::");
     // ctx.clearRect(0, 0, canvas.width, canvas.height)
     var rgba = new Uint8ClampedArray(data)
-    const image = new ImageData(rgba, 1088, 612)
+    const image = new ImageData(rgba, 640, 360)
     ctx.putImageData(image, 0, 0)
   });
   //
