@@ -6,6 +6,9 @@ const http = require("http");
 const server = http.createServer(app);
 const fs = require('fs')
 const io = require("socket.io")(server, {
+  cors: {
+    origin: '*',
+  },
   path: '/ndi_return/client/socket.io'
 });
 const addon = require('bindings')('ndi');
