@@ -63,19 +63,9 @@ int CSendAudio::command(Properties& properties)
     return 0;
 }
 
-int CSendAudio::execute(Properties& properties, const Napi::CallbackInfo& info)
+int CSendAudio::execute(uint8_t*& buffer, size_t& bsize)
 {
     if (!m_sender) return 0;
-
-    uint8_t* buffer ;
-    size_t bsize = 0;
-
-    if (info[2].IsArrayBuffer()) 
-    {
-        Napi::ArrayBuffer framebuffer = info[2].As<Napi::ArrayBuffer>();
-        bsize = framebuffer.ByteLength() / sizeof(uint8_t);
-        buffer = reinterpret_cast<uint8_t*>(framebuffer.Data());
-    }
 
     if (bsize<=0 || (int)bsize!=(m_bytes_per_sample*m_no_of_channels*m_web_channel_stride))
     {

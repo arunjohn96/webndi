@@ -49,15 +49,11 @@ int CSendVideo::command(Properties& properties)
     return 0;
 }
 
-int CSendVideo::execute(Properties& properties, const Napi::CallbackInfo& info)
+int CSendVideo::execute(uint8_t*& buffer, size_t& bsize)
 {
-    if (!m_sender) return 0;
-    if (info[2].IsArrayBuffer()) 
-    {
-        Napi::ArrayBuffer framebuffer = info[2].As<Napi::ArrayBuffer>();
-        frame.p_data = reinterpret_cast<uint8_t*>(framebuffer.Data());
-        NDIlib_send_send_video_v2(m_sender, &frame);
-    }
+    if (!m_sender || !bsize) return 0;
+	frame.p_data = buffer;
+	NDIlib_send_send_video_v2(m_sender, &frame);
     return 0;
 }
 

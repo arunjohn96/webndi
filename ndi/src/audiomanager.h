@@ -5,6 +5,7 @@
 #include <map>
 #include "sendaudio.h"
 #include "receiveaudio.h"
+#include "asyncmanager.h"
 
 class CAudioManager
 {
@@ -13,11 +14,8 @@ public:
     static void CreateReceiveChannel(Properties& properties);
     static void DeleteChannel(Properties& properties);
 	static void ChannelControl(Properties& properties);
-	static void Execute(Properties& properties, const Napi::CallbackInfo& info);
-//    static void SendAudio(Properties& properties, Napi::ArrayBuffer& frames);
-//    static void ReceiveAudio(Properties& properties);
-//	static std::string GetProperty(Properties& properties, std::string property);
-//    static void log(std::string message, Properties& properties);
+	static void SendAudio(Properties& properties, const Napi::CallbackInfo& info);
+	static void ReceiveAudio(Properties& properties, const Napi::CallbackInfo& info);
 };
 
 #endif // CAUDIOMANAGER_H

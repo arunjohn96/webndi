@@ -45,39 +45,50 @@ int CReceiveVideo::command(Properties& properties)
     return 0;
 }
 
-int CReceiveVideo::execute(Properties& properties, const Napi::CallbackInfo& info)
+int CReceiveVideo::execute(uint8_t*& buffer, size_t& bsize)
 {
     if (!m_receiver) return 0;
-
-    Napi::Env env = info.Env();
-    Napi::Function emitter = info[2].As<Napi::Function>();
-    Napi::String callback = Napi::String::New(env, "receive");
-
-    m_command = ReceiveVideo;
     NDIlib_frame_type_e frame_type;
     NDIlib_video_frame_v2_t video_frame;
-
-    while(m_command==ReceiveVideo)
+	frame_type = NDIlib_recv_capture_v2(m_receiver, &video_frame, nullptr, nullptr, 1000);
+    if(NDIlib_frame_type_video==frame_type)
     {
-        frame_type = NDIlib_recv_capture_v2(m_receiver, &video_frame, nullptr, nullptr, 1000);
-        if(NDIlib_frame_type_video==frame_type)
-        {
-//            size_t bsize = CNdi::GetLength(video_frame);
-	    size_t bsize = video_frame.yres * video_frame.line_stride_in_bytes ;
-            uint8_t* video_data = (uint8_t*)malloc(bsize);
-            memcpy(video_data, video_frame.p_data, bsize);
-
-            Napi::ArrayBuffer video_buffer = Napi::ArrayBuffer::New(env, video_data, bsize);
-            emitter({callback, video_buffer});
-
-            CUtil::sleep(m_interval);
-
-//            if(!video_buffer.IsDetached()) video_buffer.Detach();
-            NDIlib_recv_free_video_v2(m_receiver, &video_frame);
-            return 0;
-//	    delete video_data;
-      }
+		// cout << "xres:"<<video_frame.xres<<" yres:"<<video_frame.yres<<" Type:" << getVideoType(video_frame.FourCC) << endl ;
+	    bsize = video_frame.yres * video_frame.line_stride_in_bytes ;
+        buffer = (uint8_t*)malloc(bsize+1);
+        memcpy(buffer, video_frame.p_data, bsize);
+        NDIlib_recv_free_video_v2(m_receiver, &video_frame);
     }
-	NDIlib_recv_free_video_v2(m_receiver, &video_frame);
 	return 0 ;
+}
+
+const char * CReceiveVideo::getVideoType(NDIlib_FourCC_video_type_e type)
+{
+	switch(type)
+	{
+		case NDIlib_FourCC_video_type_UYVY :
+			return "NDIlib_FourCC_video_type_UYVY";
+		case NDIlib_FourCC_video_type_UYVA :
+			return "NDIlib_FourCC_video_type_UYVA";
+		case NDIlib_FourCC_video_type_P216 :
+			return "NDIlib_FourCC_video_type_P216";
+		case NDIlib_FourCC_video_type_PA16 :
+			return "NDIlib_FourCC_video_type_PA16";
+		case NDIlib_FourCC_video_type_YV12 :
+			return "NDIlib_FourCC_video_type_YV12";
+		case NDIlib_FourCC_video_type_I420 :
+			return "NDIlib_FourCC_video_type_I420";
+		case NDIlib_FourCC_video_type_NV12 :
+			return "NDIlib_FourCC_video_type_NV12";
+		case NDIlib_FourCC_video_type_BGRA :
+			return "NDIlib_FourCC_video_type_BGRA";
+		case NDIlib_FourCC_type_BGRX :
+			return "NDIlib_FourCC_type_BGRX";
+		case NDIlib_FourCC_video_type_RGBA :
+			return "NDIlib_FourCC_video_type_RGBA";
+		case NDIlib_FourCC_video_type_RGBX :
+			return "NDIlib_FourCC_video_type_RGBX";
+		default:
+			return "Unknown";
+	}
 }

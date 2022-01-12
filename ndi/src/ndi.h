@@ -52,7 +52,15 @@ class CNdi
 			}
 			
 			if(!p_source) return NULL;
-		    p_receiver =  NDIlib_recv_create_v3();
+
+			NDIlib_recv_create_v3_t receiver_desc;
+			receiver_desc.source_to_connect_to = *p_source;
+			receiver_desc.color_format = NDIlib_recv_color_format_RGBX_RGBA ;
+			receiver_desc.bandwidth = NDIlib_recv_bandwidth_highest;
+			receiver_desc.allow_video_fields = true;
+			receiver_desc.p_ndi_recv_name = NULL;
+
+		    p_receiver =  NDIlib_recv_create_v3(&receiver_desc);
 			if (p_receiver)
 			{
 				NDIlib_recv_connect(p_receiver, p_source) ;

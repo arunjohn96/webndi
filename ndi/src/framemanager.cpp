@@ -1,6 +1,7 @@
 #include <napi.h>
 #include "audiomanager.h"
 #include "videomanager.h"
+#include "asyncmanager.h"
 
 map<string, CChannel*> CChannel::list; 
 map<string, NDIlib_send_instance_t> CNdi::lst_sender;
@@ -62,8 +63,11 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
             break;
 
         case SendAudio:
+            CAudioManager::SendAudio(properties, info);
+            break;
+
         case ReceiveAudio:
-            CAudioManager::Execute(properties, info);
+			CAudioManager::ReceiveAudio(properties, info);
             break;
 
 //		case DetachAudioBuffer:
@@ -87,8 +91,11 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
             break;
 
         case SendVideo:
+            CVideoManager::SendVideo(properties, info);
+            break;
+
         case ReceiveVideo:
-            CVideoManager::Execute(properties, info);
+            CVideoManager::ReceiveVideo(properties, info);
             break;
 
         case VideoChannelControl:

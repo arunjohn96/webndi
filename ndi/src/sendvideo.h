@@ -22,7 +22,7 @@ public:
 
     std::string id();
     int command(Properties& properties); 
-    int execute(Properties& properties, const Napi::CallbackInfo& info);
+    int execute(uint8_t*& buffer, size_t& bsize);
 
 private:
     NDIlib_send_instance_t      m_sender;

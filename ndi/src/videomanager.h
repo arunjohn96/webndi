@@ -5,6 +5,7 @@
 #include <map>
 #include "sendvideo.h"
 #include "receivevideo.h"
+#include "asyncmanager.h"
 
 class CVideoManager
 {
@@ -13,11 +14,8 @@ public:
     static void CreateReceiveChannel(Properties& properties);
     static void DeleteChannel(Properties& properties);
 	static void ChannelControl(Properties& properties);
-	static void Execute(Properties& properties, const Napi::CallbackInfo& info);
-//    static void SendVideo(Properties& properties, Napi::ArrayBuffer& frames);
-//    static void ReceiveVideo(Properties& properties);
-//	static std::string GetProperty(Properties& properties, std::string property);
-//    static void log(std::string message, Properties& properties);
+	static void SendVideo(Properties& properties, const Napi::CallbackInfo& info);
+	static void ReceiveVideo(Properties& properties, const Napi::CallbackInfo& info);
 };
 
 #endif // CVIDEOMANAGER_H

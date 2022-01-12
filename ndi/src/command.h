@@ -3,6 +3,11 @@
 
 #include <map>
 
+enum StreamType {
+	AUDIO,
+	VIDEO
+};
+
 enum Command {
 	InvalidCommand,                          //  0
 	CreateSendAudioChannel,                  //  1

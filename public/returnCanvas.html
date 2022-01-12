@@ -8,7 +8,7 @@
 
 
 <body>
-  <canvas id="canvas" width="1280" height="720"></canvas>
+  <canvas id="canvas" width="1088" height="612"></canvas>
   <br>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/static/config.js"></script>
@@ -19,14 +19,27 @@
   // const socket = io.connect("http://localhost:7000");
   var canvas = document.getElementById('canvas');
   var ctx = canvas.getContext('2d');
-  const socket = io.connect("http://127.0.0.1:9002");
+  const socket = io.connect("http://127.0.0.1:9002", {
+    path: '/ndi_return/socket.io'
+  });
   // const socket = io.connect();
-  const ndiReturnSocket = io.connect();
-
+  const ndiReturnSocket = io.connect({
+    path: '/ndi_return/client/socket.io'
+  });
+  const videoProperties = {
+    id: 'x003',
+    type: 'video',
+    channelName: 'test-v1',
+    channelSearchMaxWaitTime: '25',
+    command: 'stop',
+    pollInterval: '0'
+  };
   const ExternalUserId = 'bot-ndi-return'
   const peerConnections = {};
   const config = turnConfig;
   var startTime = new Date();
+
+
 
   socket.on("answer", (id, description) => {
     console.log("event::::::: get answer");
@@ -77,11 +90,12 @@
   // var source = new EventSource('/server-sent-events')
   //
   // source.addEventListener('message', function(e) {
-  //   console.log("SSE::::::::::", e.data);
-  // }, false)
+  //   console.log("SSE::::::::::");
   //
+  // }, false)
+
   ndiReturnSocket.emit('ping')
-  ndiReturnSocket.on('pong', (id)=>{
+  ndiReturnSocket.on('pong', (id) => {
     console.log("PONG::::::::", id);
     ndiReturnSocket.emit('ping')
   })
@@ -103,9 +117,7 @@
     console.log("NDI-RETURN-SERVER::::::::::", "rgba_received::::::");
     // ctx.clearRect(0, 0, canvas.width, canvas.height)
     var rgba = new Uint8ClampedArray(data)
-    console.log(rgba);
-    console.log(rgba.length);
-    const image = new ImageData(rgba, 1280, 360)
+    const image = new ImageData(rgba, 1088, 612)
     ctx.putImageData(image, 0, 0)
   });
   //
