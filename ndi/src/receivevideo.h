@@ -23,7 +23,7 @@ public:
     std::string id();
     int command(Properties& properties);
     int execute(uint8_t*& buffer, size_t& bsize);
-	const char * getVideoType(NDIlib_FourCC_video_type_e type);
+    const char * getVideoType(NDIlib_FourCC_video_type_e type);
 
 private:
     NDIlib_recv_instance_t      m_receiver;
@@ -32,6 +32,7 @@ private:
     Command                     m_command;
     int                         m_channel_search_max_wait_time;
     double                      m_interval;
+    std::string                 m_bandwidth;
 };
 
 #endif // CRECEIVEVIDEO_H

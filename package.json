@@ -5,11 +5,9 @@
   "dependencies": {
     "aws-sdk": "^2.990.0",
     "bindings": "^1.5.0",
-    "canvas": "^2.8.0",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "node-addon-api": "^4.2.0",
-    "node-canvas": "^2.7.0",
     "puppeteer": "^10.2.0",
     "socket.io": "^3.1.2"
   },

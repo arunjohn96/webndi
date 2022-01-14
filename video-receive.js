@@ -15,13 +15,15 @@ const addon = require('bindings')('ndi');
 app.use('/static', express.static('public'))
 ndi = addon.ndi;
 const port = 7001;
+var receiverIds = []
 const videoProperties = {
   id: 'x003',
   type: 'video',
   channelName: 'test-v1',
   channelSearchMaxWaitTime: '25',
   command: 'stop',
-  pollInterval: '0'
+  pollInterval: '0',
+  bandWidth: 'low'
 };
 
 const emitter = new events.EventEmitter();
@@ -33,7 +35,7 @@ app.post('/ndi_return/client/receiver', function(req, res) {
   let channelName = req.body.channelName
   console.log(channelName);
   videoProperties.channelName = channelName
-  videoProperties.id = channelName+'-return-id'
+  videoProperties.id = channelName + '-return-id'
   initializeReturnFeed(videoProperties)
     .then(() => {
       res.send({
@@ -48,7 +50,6 @@ app.post('/ndi_return/client/receiver', function(req, res) {
       })
     })
 })
-
 app.use('/static', express.static('public'))
 app.get("/ndi_return/client/receiver", function(req, res) {
   res.sendFile(__dirname + "/public/returnCanvas.html");
@@ -103,6 +104,7 @@ io.sockets.on("connection", socket => {
 
 async function initializeReturnFeed(videoProperties) {
   ndi('create-receive-video-channel', videoProperties);
+  receiverIds.push(videoProperties.id)
   console.log("CREATE_RECEIVE_VIDEO_CHANNEL::::::::::::::::");
   ndi('receive-video', videoProperties, message, capture);
 }
