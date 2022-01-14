@@ -3,16 +3,17 @@
 
 CReceiveVideo::CReceiveVideo(Properties& properties)
 {
+	SetModeAndType("receive", "video");
     CUtil::GetProperty(m_id, properties, "id");
     CUtil::GetProperty(m_channel_name, properties, "channelName");
     CUtil::GetProperty(m_channel_search_max_wait_time, properties, "channelSearchMaxWaitTime");   // 60
     CUtil::GetProperty(m_interval, properties, "pollInterval");   // 0.03
-
+    
     m_receiver = NULL;
     if (!m_interval) m_interval=0.0;
-
+    
     CUtil::log(properties, "initializing receive video");
-    cout<<"  m_channel_search_max_wait_time: "<<m_channel_search_max_wait_time <<endl;
+    cout<<"  m_channel_search_max_wait_time: "<<m_channel_search_max_wait_time <<endl; 
 
     m_receiver = CNdi::CreateReceiver(m_channel_name, m_channel_search_max_wait_time);
     if(!m_receiver) {

@@ -12,8 +12,6 @@ class CVideoManager
 public:
     static void CreateSendChannel(Properties& properties);
     static void CreateReceiveChannel(Properties& properties);
-    static void DeleteChannel(Properties& properties);
-	static void ChannelControl(Properties& properties);
 	static void SendVideo(Properties& properties, const Napi::CallbackInfo& info);
 	static void ReceiveVideo(Properties& properties, const Napi::CallbackInfo& info);
 };

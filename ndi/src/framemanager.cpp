@@ -1,6 +1,7 @@
 #include <napi.h>
 #include "audiomanager.h"
 #include "videomanager.h"
+#include "channelmanager.h"
 #include "asyncmanager.h"
 
 map<string, CChannel*> CChannel::list; 
@@ -50,6 +51,10 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
     switch( CUtil::Evaluate(info[0].As<Napi::String>()) )
     {
 
+        case ListChannel:
+            CChannelManager::ListChannel(properties, info);
+            break;
+
         case CreateSendAudioChannel:
             CAudioManager::CreateSendChannel(properties);
             break;
@@ -59,7 +64,7 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
             break;
 
         case DeleteAudioChannel:
-            CAudioManager::DeleteChannel(properties);
+            CChannelManager::DeleteChannel(properties);
             break;
 
         case SendAudio:
@@ -75,7 +80,7 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
 //			break;
 
         case AudioChannelControl:
-            CAudioManager::ChannelControl(properties);
+            CChannelManager::ChannelControl(properties);
             break;
 
         case CreateSendVideoChannel:
@@ -87,7 +92,7 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
             break;
 
         case DeleteVideoChannel:
-            CVideoManager::DeleteChannel(properties);
+            CChannelManager::DeleteChannel(properties);
             break;
 
         case SendVideo:
@@ -99,7 +104,7 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
             break;
 
         case VideoChannelControl:
-            CVideoManager::ChannelControl(properties);
+            CChannelManager::ChannelControl(properties);
             break;
 
 //		case DetachVideoBuffer:

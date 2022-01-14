@@ -14,20 +14,6 @@ void CAudioManager::CreateReceiveChannel(Properties& properties)
     CChannel::book(stream);
 }
 
-void CAudioManager::DeleteChannel(Properties& properties)
-{
-    CUtil::log(properties, "deleting audio");
-    CChannel::kick(CUtil::GetId(properties));
-}
-
-void CAudioManager::ChannelControl(Properties& properties)
-{
-	CChannel* channel = CChannel::get(CUtil::GetId(properties));
-	if(channel) {
-		channel->stream()->command(properties);
-	}
-}
-
 void CAudioManager::SendAudio(Properties& properties, const Napi::CallbackInfo& info)
 {
     if (info[2].IsArrayBuffer()) 

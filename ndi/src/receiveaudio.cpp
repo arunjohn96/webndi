@@ -3,6 +3,7 @@
 
 CReceiveAudio::CReceiveAudio(Properties& properties)
 {
+	SetModeAndType("receive", "audio");
     CUtil::GetProperty(m_id, properties, "id");
     CUtil::GetProperty(m_channel_name, properties, "channelName");
     CUtil::GetProperty(m_channel_search_max_wait_time, properties, "channelSearchMaxWaitTime");   // 60

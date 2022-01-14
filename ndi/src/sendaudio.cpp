@@ -2,6 +2,7 @@
 
 CSendAudio::CSendAudio(Properties& properties)
 {
+	SetModeAndType("send", "audio");
     CUtil::GetProperty(m_id, properties, "id");
     CUtil::GetProperty(m_channel_name, properties, "channelName");             // 48000
     CUtil::GetProperty(m_sample_rate, properties, "sampleRate");               // 2

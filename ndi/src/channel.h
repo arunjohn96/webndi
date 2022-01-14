@@ -38,15 +38,15 @@ public:
             CChannel* channel = get(stream->id());
             if(!channel) 
             {
-                status("booking channel ", stream->id());
+                status("booking new", stream) ;
                 channel = new CChannel();
                 channel->m_stream = stream;
                 list[stream->id()] = channel;
-                status("successfully booked a channel for ", stream->id());
+                status("successfully booked", stream);
             }
             else 
             {
-                status("booking already done for channel ", stream->id());
+                status("already booked", stream);
             }
         }
         return channel;
@@ -62,6 +62,11 @@ public:
             delete channel;  
             list.erase(id); 
         }
+    }
+
+    static void status(std::string msg, CStream* stream)
+    {
+        std::cout<<msg<<" "<<stream->Type()<<" "<<stream->Mode()<<" "<<stream->id()<<std::endl;
     }
 
     static void status(std::string msg, std::string id)

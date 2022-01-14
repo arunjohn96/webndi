@@ -2,6 +2,7 @@
 
 CSendVideo::CSendVideo(Properties& properties)
 {
+	SetModeAndType("send", "video");
     CUtil::GetProperty(m_id, properties, "id");
     CUtil::GetProperty(m_channel_name, properties, "channelName");
     CUtil::GetProperty(m_xres, properties, "xres");

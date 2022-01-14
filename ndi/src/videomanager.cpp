@@ -14,20 +14,6 @@ void CVideoManager::CreateReceiveChannel(Properties& properties)
     CChannel::book(stream);
 }
 
-void CVideoManager::DeleteChannel(Properties& properties)
-{
-    CUtil::log(properties, "deleting video");
-    CChannel::kick(CUtil::GetId(properties));
-}
-
-void CVideoManager::ChannelControl(Properties& properties)
-{
-    CChannel* channel = CChannel::get(CUtil::GetId(properties));
-    if(channel) {
-        channel->stream()->command(properties);
-    }
-}
-
 void CVideoManager::SendVideo(Properties& properties, const Napi::CallbackInfo& info)
 {
     if (info[2].IsArrayBuffer()) 
