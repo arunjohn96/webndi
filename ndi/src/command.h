@@ -11,37 +11,35 @@ enum StreamType {
 enum Command {
 	InvalidCommand,                          //  0
 	ListChannel,                             //  1
-	CreateSendAudioChannel,                  //  2
-	CreateReceiveAudioChannel,               //  3
+	ChannelControl,                          //  2
+	CreateSendAudioChannel,                  //  3
+	CreateReceiveAudioChannel,               //  4
 	DeleteAudioChannel,
 	SendAudio,
 	ReceiveAudio,
-	AudioChannelControl,
 	CreateSendVideoChannel,
-	CreateReceiveVideoChannel,               //  10
+	CreateReceiveVideoChannel,               //  9
 	DeleteVideoChannel,
 	SendVideo,
 	ReceiveVideo,
-	VideoChannelControl,
-	Stop,                                    //  15
+	Stop,                                    // 13
 	Sleep
 };
 
 static const std::map<std::string, Command> Commands 
 {
 	{ "list-channel", ListChannel },
+	{ "channel-control", ChannelControl},
 	{ "create-send-audio-channel", CreateSendAudioChannel },
 	{ "create-receive-audio-channel", CreateReceiveAudioChannel },
 	{ "delete-audio-channel", DeleteAudioChannel },
 	{ "send-audio", SendAudio },
 	{ "receive-audio", ReceiveAudio},
-	{ "audio-channel-control", AudioChannelControl},
 	{ "create-send-video-channel", CreateSendVideoChannel },
 	{ "create-receive-video-channel", CreateReceiveVideoChannel },
 	{ "delete-video-channel", DeleteVideoChannel },
 	{ "send-video", SendVideo},
 	{ "receive-video", ReceiveVideo},
-	{ "video-channel-control", VideoChannelControl},
 	{ "stop", Stop},
 	{ "sleep", Sleep}
 };

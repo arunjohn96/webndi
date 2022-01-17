@@ -55,6 +55,10 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
             CChannelManager::ListChannel(properties, info);
             break;
 
+        case ChannelControl:
+            CChannelManager::ChannelControl(properties);
+            break;
+
         case CreateSendAudioChannel:
             CAudioManager::CreateSendChannel(properties);
             break;
@@ -73,14 +77,6 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
 
         case ReceiveAudio:
 			CAudioManager::ReceiveAudio(properties, info);
-            break;
-
-//		case DetachAudioBuffer:
-//			CAudioManager::DetachAudioBuffer(properties);
-//			break;
-
-        case AudioChannelControl:
-            CChannelManager::ChannelControl(properties);
             break;
 
         case CreateSendVideoChannel:
@@ -102,14 +98,6 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
         case ReceiveVideo:
             CVideoManager::ReceiveVideo(properties, info);
             break;
-
-        case VideoChannelControl:
-            CChannelManager::ChannelControl(properties);
-            break;
-
-//		case DetachVideoBuffer:
-//			CAudioManager::DetachAudioBuffer(properties);
-//			break;
 
 		case Sleep:
 			CUtil::sleep(properties);

@@ -23,14 +23,13 @@ public:
     CReceiveAudio(Properties& properties);
 
     std::string id();
-    int command(Properties& properties);
+    std::string name();
     int execute(uint8_t*& buffer, size_t& bsize);
 
 private:
     NDIlib_recv_instance_t      m_receiver;
     std::string                 m_id;
     std::string                 m_channel_name;
-    Command                     m_command;
     int                         m_channel_search_max_wait_time;
     double                      m_interval;
 };

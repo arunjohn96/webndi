@@ -59,10 +59,11 @@ std::string CSendAudio::id()
     return m_id;
 }
 
-int CSendAudio::command(Properties& properties)
+std::string CSendAudio::name()
 {
-    return 0;
+    return m_channel_name;
 }
+
 
 int CSendAudio::execute(uint8_t*& buffer, size_t& bsize)
 {

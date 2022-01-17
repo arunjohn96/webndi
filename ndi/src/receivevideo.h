@@ -21,15 +21,13 @@ public:
     CReceiveVideo(Properties& properties);
 
     std::string id();
-    int command(Properties& properties);
+    std::string name();
     int execute(uint8_t*& buffer, size_t& bsize);
-    const char * getVideoType(NDIlib_FourCC_video_type_e type);
 
 private:
     NDIlib_recv_instance_t      m_receiver;
     std::string                 m_id;
     std::string                 m_channel_name;
-    Command                     m_command;
     int                         m_channel_search_max_wait_time;
     double                      m_interval;
     std::string                 m_bandwidth;

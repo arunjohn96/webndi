@@ -21,7 +21,7 @@ public:
     CSendVideo(Properties& properties);
 
     std::string id();
-    int command(Properties& properties); 
+    std::string name();
     int execute(uint8_t*& buffer, size_t& bsize);
 
 private:

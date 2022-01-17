@@ -41,9 +41,10 @@ io.sockets.on("connection", socket => {
       audioProperties.channelName = channelName
 
       ndi('create-send-audio-channel', audioProperties);
+    } else {
+      var audioFrameIs = new Uint8Array(audio.data);
+      ndi("send-audio", audioProperties, audioFrameIs.buffer);
     }
-    var audioFrameIs = new Uint8Array(audio.data);
-    ndi("send-audio", audioProperties, audioFrameIs.buffer);
   });
 
   socket.on('video frames', video => {
@@ -54,46 +55,12 @@ io.sockets.on("connection", socket => {
       videoProperties.xres = video.xres
       videoProperties.yres = video.yres
       videoProperties.frameRate = video.frameRate
-
       ndi('create-send-video-channel', videoProperties);
-      ndi('create-send-video-channel', {
-        id: 'v002',
-        type: 'video',
-        channelName: 'testv1',
-        xres: video.xres,
-        yres: video.yres,
-        frameRate: video.frameRate
-      });
-      ndi('create-send-video-channel', {
-        id: 'v003',
-        type: 'video',
-        channelName: 'testv2',
-        xres: video.xres,
-        yres: video.yres,
-        frameRate: video.frameRate
-      });
 
+    } else {
+      var videoFrameIs = new Uint8ClampedArray(video.data);
+      ndi("send-video", videoProperties, videoFrameIs.buffer);
     }
-    var videoFrameIs = new Uint8ClampedArray(video.data);
-    var videoFrameIs2 = new Uint8ClampedArray(video.data);
-    var videoFrameIs3 = new Uint8ClampedArray(video.data);
-    ndi("send-video", videoProperties, videoFrameIs.buffer);
-    ndi("send-video", {
-      id: 'v002',
-      type: 'video',
-      channelName: 'testv1',
-      xres: video.xres,
-      yres: video.yres,
-      frameRate: video.frameRate
-    }, videoFrameIs2.buffer);
-    ndi("send-video", {
-      id: 'v003',
-      type: 'video',
-      channelName: 'testv2',
-      xres: video.xres,
-      yres: video.yres,
-      frameRate: video.frameRate
-    }, videoFrameIs3.buffer);
   });
 });
 

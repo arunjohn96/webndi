@@ -23,12 +23,19 @@ class CNdi
 
 			NDIlib_find_instance_t p_finder = NDIlib_find_create_v2();
 
+			int wait_time = 0;
 			uint32_t no_of_sources = 0;
-			const NDIlib_source_t* p_sources = GetAllSources(p_finder, no_of_sources, max_wait_time);
-
-			for(uint32_t index=0; index<no_of_sources; index++)
+			// const NDIlib_source_t* p_sources = GetAllSources(p_finder, no_of_sources, max_wait_time);
+			const NDIlib_source_t* p_sources;
+			while(wait_time < max_wait_time)
 			{
-				v_sources.push_back(p_sources[index].p_ndi_name) ;
+				wait_time++;
+				NDIlib_find_wait_for_sources(p_finder, max_wait_time/* 1 second */);
+				p_sources = NDIlib_find_get_current_sources(p_finder, &no_of_sources);
+				for(uint32_t index=0; index<no_of_sources; index++)
+				{
+					v_sources.push_back(p_sources[index].p_ndi_name) ;
+				}
 			}
 
 			NDIlib_find_destroy(p_finder);
@@ -110,13 +117,10 @@ class CNdi
 			uint32_t no_of_sources = 0;
 			const NDIlib_source_t* p_source = NULL;
 			const NDIlib_source_t* p_sources = GetAllSources(p_finder, no_of_sources, max_wait_time);
-			CUtil::log("Before While ::: CreateReceiver::::") ;
 
 			while(!p_source && no_of_sources>0)
 			{
-				CUtil::log("In While ::: CreateReceiver::::") ;
 				std::string ndi_source_name = p_sources[no_of_sources-1].p_ndi_name ;
-				CUtil::log(" index:" + std::to_string(no_of_sources) + " name:" + ndi_source_name);
 				if(ndi_source_name.find("("+source_name+")")!=std::string::npos)
 				{
 					p_source = &p_sources[no_of_sources-1];
@@ -125,7 +129,6 @@ class CNdi
 				no_of_sources-- ;
 			}
 
-			CUtil::log("After While ::: CreateReceiver::::") ;
 			if(p_source)
 			{
 				NDIlib_recv_create_v3_t receiver_desc;
@@ -171,6 +174,37 @@ class CNdi
 		return p_sender ;
 	}
 
+	static const char * GetVideoType(NDIlib_FourCC_video_type_e type)
+	{
+		switch(type)
+		{
+			case NDIlib_FourCC_video_type_UYVY :
+				return "NDIlib_FourCC_video_type_UYVY";
+			case NDIlib_FourCC_video_type_UYVA :
+				return "NDIlib_FourCC_video_type_UYVA";
+			case NDIlib_FourCC_video_type_P216 :
+				return "NDIlib_FourCC_video_type_P216";
+			case NDIlib_FourCC_video_type_PA16 :
+				return "NDIlib_FourCC_video_type_PA16";
+			case NDIlib_FourCC_video_type_YV12 :
+				return "NDIlib_FourCC_video_type_YV12";
+			case NDIlib_FourCC_video_type_I420 :
+				return "NDIlib_FourCC_video_type_I420";
+			case NDIlib_FourCC_video_type_NV12 :
+				return "NDIlib_FourCC_video_type_NV12";
+			case NDIlib_FourCC_video_type_BGRA :
+				return "NDIlib_FourCC_video_type_BGRA";
+			case NDIlib_FourCC_type_BGRX :
+				return "NDIlib_FourCC_type_BGRX";
+			case NDIlib_FourCC_video_type_RGBA :
+				return "NDIlib_FourCC_video_type_RGBA";
+			case NDIlib_FourCC_video_type_RGBX :
+				return "NDIlib_FourCC_video_type_RGBX";
+			default:
+				return "Unknown";
+		}
+	}
+
 	private:
 
 	static const NDIlib_source_t* GetAllSources(NDIlib_find_instance_t p_finder, uint32_t& no_of_sources, int wait_time)
@@ -179,7 +213,6 @@ class CNdi
 		CUtil::log("Serching for all NDI sources ...");
 		while(p_finder && !no_of_sources && wait_time)
 		{
-			CUtil::log("Serching ....");
 			NDIlib_find_wait_for_sources(p_finder, 1000/* 1 second */);
 			p_sources = NDIlib_find_get_current_sources(p_finder, &no_of_sources);
 			wait_time-- ;

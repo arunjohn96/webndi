@@ -2,7 +2,7 @@
 
 CSendVideo::CSendVideo(Properties& properties)
 {
-	SetModeAndType("send", "video");
+    SetModeAndType("send", "video");
     CUtil::GetProperty(m_id, properties, "id");
     CUtil::GetProperty(m_channel_name, properties, "channelName");
     CUtil::GetProperty(m_xres, properties, "xres");
@@ -15,9 +15,9 @@ CSendVideo::CSendVideo(Properties& properties)
         <<endl<<"  m_framerate: "<<m_framerate
         <<endl; 
 
-	m_sender = CNdi::CreateSender(m_channel_name) ;
-	if (m_sender)
-	{
+    m_sender = CNdi::CreateSender(m_channel_name) ;
+    if (m_sender)
+    {
         CUtil::log(properties, "created sender for video");
 
         frame.xres = m_xres;
@@ -45,16 +45,16 @@ std::string CSendVideo::id()
     return m_id;
 }
 
-int CSendVideo::command(Properties& properties)
+std::string CSendVideo::name()
 {
-    return 0;
+    return m_channel_name;
 }
 
 int CSendVideo::execute(uint8_t*& buffer, size_t& bsize)
 {
     if (!m_sender || !bsize) return 0;
-	frame.p_data = buffer;
-	NDIlib_send_send_video_v2(m_sender, &frame);
+    frame.p_data = buffer;
+    NDIlib_send_send_video_v2(m_sender, &frame);
     return 0;
 }
 
