@@ -179,6 +179,7 @@ io.sockets.on("connection", socket => {
 
 async function initializeReturnFeed(videoProperties) {
   console.log("initializeReturnFeed::::::::::::::::", videoProperties);
+  ndi('channel-control', videoProperties);
   ndi('create-receive-video-channel', videoProperties);
   ndi('receive-video', videoProperties, message, capture);
 }
@@ -208,7 +209,7 @@ async function setVideoProperties(data) {
 
 async function listNDIFeeds() {
   const SearchProperties = {
-    channelSearchMaxWaitTime: '100',
+    channelSearchMaxWaitTime: '30',
   };
 
   var x;
