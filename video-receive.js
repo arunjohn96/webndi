@@ -225,14 +225,19 @@ async function setVideoProperties(data) {
 async function listNDIFeeds() {
   const SearchProperties = {
     channelSearchMaxWaitTime: '30',
+    channelGroup:'test',
+    channelIps:'10.192.11.189,10.192.11.86',
+    channelSearchMaxTrials:'10'
   };
 
   var x;
   ndi('list-channel', SearchProperties, (data) => {
-    x = data.filter(onlyUnique).sort();
+    console.log(data);
+    // x = data.filter(onlyUnique).sort();
+    x = data;
   });
 
-  console.log("X:::", x);
+  // console.log("X:::", x);
 
   return x
 }
