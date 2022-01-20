@@ -11,7 +11,7 @@ class CChannelManager
 public:
     static void ListChannel(Properties& properties, const Napi::CallbackInfo& info);
     static void DeleteChannel(Properties& properties);
-	static void ChannelControl(Properties& properties);
+    static void ChannelControl(Properties& properties);
 };
 
 #endif // CCHANNELMANAGER_H

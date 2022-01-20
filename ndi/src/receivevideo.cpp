@@ -3,9 +3,11 @@
 
 CReceiveVideo::CReceiveVideo(Properties& properties)
 {
-	SetModeAndType("receive", "video");
+    SetModeAndType("receive", "video");
     CUtil::GetProperty(m_id, properties, "id");
     CUtil::GetProperty(m_channel_name, properties, "channelName");
+    CUtil::GetProperty(m_channel_group, properties, "channelGroup");
+    CUtil::GetProperty(m_channel_ips, properties, "channelIps");
     CUtil::GetProperty(m_channel_search_max_wait_time, properties, "channelSearchMaxWaitTime");   // 60
     CUtil::GetProperty(m_interval, properties, "pollInterval");   // 0.03
     CUtil::GetProperty(m_bandwidth, properties, "bandWidth");   // 0.03
@@ -16,7 +18,7 @@ CReceiveVideo::CReceiveVideo(Properties& properties)
     CUtil::log(properties, "initializing receive video");
     cout<<"  m_channel_search_max_wait_time: "<<m_channel_search_max_wait_time <<endl; 
 
-    m_receiver = CNdi::CreateReceiver(m_channel_name, m_channel_search_max_wait_time, m_bandwidth);
+    m_receiver = CNdi::CreateReceiver(m_channel_name, m_channel_group, m_channel_ips, m_channel_search_max_wait_time, m_bandwidth);
     if(!m_receiver) {
        CUtil::log(properties, "failed receiver creation for video") ;
     }
@@ -44,6 +46,11 @@ std::string CReceiveVideo::id()
 std::string CReceiveVideo::name()
 {
     return m_channel_name;
+}
+
+std::string CReceiveVideo::group()
+{
+    return m_channel_group;
 }
 
 int CReceiveVideo::execute(uint8_t*& buffer, size_t& bsize)

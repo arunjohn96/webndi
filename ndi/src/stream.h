@@ -12,6 +12,7 @@ public:
     virtual ~CStream() {};
     virtual std::string id() = 0;
     virtual std::string name() = 0;
+    virtual std::string group() = 0;
     virtual int execute(uint8_t*& buffer, size_t& bsize)=0;
 
     std::string Mode() { return m_mode; }

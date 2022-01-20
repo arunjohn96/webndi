@@ -12,8 +12,8 @@ class CAudioManager
 public:
     static void CreateSendChannel(Properties& properties);
     static void CreateReceiveChannel(Properties& properties);
-	static void SendAudio(Properties& properties, const Napi::CallbackInfo& info);
-	static void ReceiveAudio(Properties& properties, const Napi::CallbackInfo& info);
+    static void SendAudio(Properties& properties, const Napi::CallbackInfo& info);
+    static void ReceiveAudio(Properties& properties, const Napi::CallbackInfo& info);
 };
 
 #endif // CAUDIOMANAGER_H

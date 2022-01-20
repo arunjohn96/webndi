@@ -11,7 +11,7 @@ map<string, NDIlib_recv_instance_t> CNdi::lst_receiver;
 Napi::Value setFrames(const Napi::CallbackInfo& info) 
 {
 
-	Properties properties;
+    Properties properties;
     Napi::Object frameproperties;
 
     if (info.Length() < 2) 
@@ -20,10 +20,10 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
         return info.Env().Undefined();
     }
     
-	if (info.Length() == 3 && !(info[2].IsArrayBuffer() || info[2].IsFunction()))
-	{
-		Napi::Error::New(info.Env(), "Invalid Manifest").ThrowAsJavaScriptException();
-		return info.Env().Undefined();
+    if (info.Length() == 3 && !(info[2].IsArrayBuffer() || info[2].IsFunction()))
+    {
+        Napi::Error::New(info.Env(), "Invalid Manifest").ThrowAsJavaScriptException();
+        return info.Env().Undefined();
     }
 
     if (!info[0].IsString()) 
@@ -76,7 +76,7 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
             break;
 
         case ReceiveAudio:
-			CAudioManager::ReceiveAudio(properties, info);
+            CAudioManager::ReceiveAudio(properties, info);
             break;
 
         case CreateSendVideoChannel:
@@ -99,12 +99,12 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
             CVideoManager::ReceiveVideo(properties, info);
             break;
 
-		case Sleep:
-			CUtil::sleep(properties);
+        case Sleep:
+            CUtil::sleep(properties);
             break;
 
-		default:
-			break;
+        default:
+            break;
     }
     return info.Env().Undefined();
 }

@@ -6,6 +6,8 @@ CReceiveAudio::CReceiveAudio(Properties& properties)
     SetModeAndType("receive", "audio");
     CUtil::GetProperty(m_id, properties, "id");
     CUtil::GetProperty(m_channel_name, properties, "channelName");
+    CUtil::GetProperty(m_channel_group, properties, "channelGroup");
+    CUtil::GetProperty(m_channel_ips, properties, "channelIps");
     CUtil::GetProperty(m_channel_search_max_wait_time, properties, "channelSearchMaxWaitTime");   // 60
     CUtil::GetProperty(m_interval, properties, "pollInterval");   // 0.03
 
@@ -15,7 +17,7 @@ CReceiveAudio::CReceiveAudio(Properties& properties)
     CUtil::log(properties, "initializing receive audio");
     cout<<"  m_channel_search_max_wait_time: "<<m_channel_search_max_wait_time <<endl;
 
-    m_receiver = CNdi::CreateReceiver(m_channel_name, m_channel_search_max_wait_time);
+    m_receiver = CNdi::CreateReceiver(m_channel_name, m_channel_group, m_channel_ips, m_channel_search_max_wait_time);
     if(!m_receiver) {
        CUtil::log(properties, "failed receiver creation for audio") ;
     }
@@ -42,6 +44,11 @@ std::string CReceiveAudio::id()
 std::string CReceiveAudio::name()
 {
     return m_channel_name;
+}
+
+std::string CReceiveAudio::group()
+{
+    return m_channel_group;
 }
 
 int CReceiveAudio::execute(uint8_t*& buffer, size_t& bsize)

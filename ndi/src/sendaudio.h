@@ -22,6 +22,7 @@ public:
 
     std::string id(); 
     std::string name();
+    std::string group();
     int execute(uint8_t*& buffer, size_t& bsize);
 
 private:
@@ -29,6 +30,7 @@ private:
     NDIlib_send_instance_t  m_sender;
     std::string             m_id;
     std::string             m_channel_name;
+    std::string             m_channel_group;
     int                     m_sample_rate;
     int                     m_no_of_channels;
     int                     m_bytes_per_sample;

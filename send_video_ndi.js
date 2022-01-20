@@ -17,7 +17,9 @@ var videoProperties = {
   channelName: 'testv',
   xres: '960',
   yres: '540',
-  frameRate: (1000 / 30) + ''
+  frameRate: (1000 / 30) + '',
+  // channelIps: '',
+  channelGroup: '',
 };
 const audioProperties = {
   id: '',
@@ -28,7 +30,9 @@ const audioProperties = {
   bytesPerSample: '4',
   webFrameRate: '45',
   webChannelStride: '128',
-  ndiChannelStride: '48000'
+  ndiChannelStride: '48000',
+  channelIps: '',
+  channelGroup: '',
 };
 // ndi('create-send-video-channel', videoProperties) ;
 const port = process.env.PORT || 8000;
@@ -39,6 +43,8 @@ io.sockets.on("connection", socket => {
     if (audioProperties.id != channelName) {
       audioProperties.id = channelName
       audioProperties.channelName = channelName
+      // audioProperties.channelIps = videoProperties.channelIps
+      audioProperties.channelGroup = videoProperties.channelGroup
 
       ndi('create-send-audio-channel', audioProperties);
     } else {
@@ -48,13 +54,19 @@ io.sockets.on("connection", socket => {
   });
 
   socket.on('video frames', video => {
-    if (videoProperties.id != video.id || videoProperties.channelName != video.channelName) {
+    if (!(videoProperties.id == video.id && videoProperties.channelName == video.channelName &&
+      videoProperties.channelIps == video.channelIps && videoProperties.channelGroup == video.channelGroup
+    && videoProperties.xres == video.xres && videoProperties.yres == video.yres &&
+    videoProperties.frameRate == video.frameRate)
+  ) {
       videoProperties.id = video.id
       videoProperties.channelName = video.channelName
       videoProperties.type = video.type
       videoProperties.xres = video.xres
       videoProperties.yres = video.yres
       videoProperties.frameRate = video.frameRate
+      videoProperties.channelIps = video.channelIps
+      videoProperties.channelGroup = video.channelGroup
       ndi('create-send-video-channel', videoProperties);
 
     } else {

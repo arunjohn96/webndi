@@ -5,6 +5,7 @@ CSendVideo::CSendVideo(Properties& properties)
     SetModeAndType("send", "video");
     CUtil::GetProperty(m_id, properties, "id");
     CUtil::GetProperty(m_channel_name, properties, "channelName");
+    CUtil::GetProperty(m_channel_group, properties, "channelGroup");
     CUtil::GetProperty(m_xres, properties, "xres");
     CUtil::GetProperty(m_yres, properties, "yres");
     CUtil::GetProperty(m_framerate, properties, "frameRate");
@@ -15,7 +16,7 @@ CSendVideo::CSendVideo(Properties& properties)
         <<endl<<"  m_framerate: "<<m_framerate
         <<endl; 
 
-    m_sender = CNdi::CreateSender(m_channel_name) ;
+    m_sender = CNdi::CreateSender(m_channel_name, m_channel_group) ;
     if (m_sender)
     {
         CUtil::log(properties, "created sender for video");
@@ -48,6 +49,11 @@ std::string CSendVideo::id()
 std::string CSendVideo::name()
 {
     return m_channel_name;
+}
+
+std::string CSendVideo::group()
+{
+    return m_channel_group;
 }
 
 int CSendVideo::execute(uint8_t*& buffer, size_t& bsize)

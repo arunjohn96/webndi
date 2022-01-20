@@ -2,9 +2,10 @@
 
 CSendAudio::CSendAudio(Properties& properties)
 {
-	SetModeAndType("send", "audio");
+    SetModeAndType("send", "audio");
     CUtil::GetProperty(m_id, properties, "id");
     CUtil::GetProperty(m_channel_name, properties, "channelName");             // 48000
+    CUtil::GetProperty(m_channel_group, properties, "channelGroup");
     CUtil::GetProperty(m_sample_rate, properties, "sampleRate");               // 2
     CUtil::GetProperty(m_no_of_channels, properties, "noOfChannels");          // 4
     CUtil::GetProperty(m_bytes_per_sample, properties, "bytesPerSample");
@@ -26,9 +27,9 @@ CSendAudio::CSendAudio(Properties& properties)
         <<endl<<"  ndi buffer size(float): "<<m_ndi_channel_stride * m_no_of_channels
         <<endl; 
 
-	m_sender = CNdi::CreateSender(m_channel_name) ;
-	if (m_sender)
-	{
+    m_sender = CNdi::CreateSender(m_channel_name, m_channel_group) ;
+    if (m_sender)
+    {
         CUtil::log(properties, "Created sender for audio");
         frame.sample_rate             = m_sample_rate;                              // 48000
         frame.no_channels             = m_no_of_channels;                           // 2
@@ -37,7 +38,7 @@ CSendAudio::CSendAudio(Properties& properties)
         frame.p_data                  = (float*)malloc( m_ndi_channel_stride * m_no_of_channels * sizeof(float));
         p_ndi_channel                 = (float*)((uint8_t*)frame.p_data);
         SetFrame();
-	}
+    }
     else
         CUtil::log(properties, "failed sender creation for audio") ;
 
@@ -62,6 +63,11 @@ std::string CSendAudio::id()
 std::string CSendAudio::name()
 {
     return m_channel_name;
+}
+
+std::string CSendAudio::group()
+{
+    return m_channel_group;
 }
 
 

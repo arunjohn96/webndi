@@ -22,12 +22,14 @@ public:
 
     std::string id();
     std::string name();
+    std::string group();
     int execute(uint8_t*& buffer, size_t& bsize);
 
 private:
     NDIlib_send_instance_t      m_sender;
     std::string                 m_id;
     std::string                 m_channel_name;
+    std::string                 m_channel_group;
     int                         m_xres;
     int                         m_yres;
     int                         m_framerate;

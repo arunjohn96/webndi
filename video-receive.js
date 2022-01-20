@@ -19,11 +19,14 @@ const videoProperties = {
   id: 'x003',
   type: 'video',
   channelName: 'test-v1',
+  channelGroup: '',
+  channelIps: '',
   channelSearchMaxWaitTime: '25',
   command: 'stop',
   pollInterval: '0',
   bandWidth: 'low'
 };
+
 
 const emitter = new events.EventEmitter();
 
@@ -138,7 +141,7 @@ function capture(data) {
   var rgbaFrame = new Uint8Array(videoFrameIs.byteLength)
   rgbaFrame.set(videoFrameIs)
   emitter.emit('rgba', rgbaFrame)
-  console.log("Data::::");
+  // console.log("Data::::");
 }
 
 io.sockets.on("connection", socket => {
@@ -196,13 +199,25 @@ async function deleteReturnFeed(videoProperties) {
 
 async function setVideoProperties(data) {
   var vProperty = videoProperties;
-  console.log("setVideoProperties ::::::", data);
+  var currentDate = new Date()
+  console.log("setVideoProperties ::::::", data, currentDate);
   if (data.hasOwnProperty('channelName')) {
     vProperty.channelName = data.channelName
-    vProperty.id = data.channelName + '-return-id'
+    vProperty.id = ''+data.channelName + currentDate.getDate() +
+      (currentDate.getMonth() + 1) +
+      currentDate.getFullYear() +
+      currentDate.getHours() +
+      currentDate.getMinutes() +
+      currentDate.getSeconds();
   }
   if (data.hasOwnProperty('command')) {
     vProperty.command = data.command
+  }
+  if (data.hasOwnProperty('channelIps')) {
+    vProperty.channelIps = data.channelIps
+  }
+  if (data.hasOwnProperty('channelGroup')) {
+    vProperty.channelGroup = data.channelGroup
   }
   return vProperty
 };
@@ -214,7 +229,7 @@ async function listNDIFeeds() {
 
   var x;
   ndi('list-channel', SearchProperties, (data) => {
-    x= data.filter(onlyUnique).sort();
+    x = data.filter(onlyUnique).sort();
   });
 
   console.log("X:::", x);

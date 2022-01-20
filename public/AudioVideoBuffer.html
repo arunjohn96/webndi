@@ -53,20 +53,27 @@
     }
 
   }
-
+  var currentDate = new Date();
   var channelName = 'testv';
-  var channelId = channelName+canvas.width;
+  var channelIps = '';
+  var channelGroup = '';
+  var channelId = channelName + canvas.width + currentDate.getDate() +
+    (currentDate.getMonth() + 1) +
+    currentDate.getFullYear() +
+    currentDate.getHours() +
+    currentDate.getMinutes() +
+    currentDate.getSeconds();
   var frameRate = 1000 / 16;
   if (urlParams.has('frameRate')) {
     // try {
-    let fRate = 1000/ parseInt(urlParams.get('frameRate'))
+    let fRate = 1000 / parseInt(urlParams.get('frameRate'))
 
-    if (!(isNaN(fRate) )) {
+    if (!(isNaN(fRate))) {
       frameRate = fRate
-      console.log("FRAMERATE UPDATED::::::",1000/frameRate);
+      console.log("FRAMERATE UPDATED::::::", 1000 / frameRate);
     } else {
-      frameRate = 1000/16
-      console.log("FRAMERATE default::::::", 1000/frameRate);
+      frameRate = 1000 / 16
+      console.log("FRAMERATE default::::::", 1000 / frameRate);
     }
 
   }
@@ -74,14 +81,50 @@
     // try {
     let cName = urlParams.get('channelName')
 
-    if (!(cName==="")) {
+    if (!(cName === "")) {
       channelName = cName
-      channelId = channelName+canvas.width
+      channelId = channelName + canvas.width+currentDate.getDate() +
+        (currentDate.getMonth() + 1) +
+        currentDate.getFullYear() +
+        currentDate.getHours() +
+        currentDate.getMinutes() +
+        currentDate.getSeconds();
       console.log("CHANNEL-NAME UPDATED::::::", channelName);
     } else {
       channelName = 'testv';
-      channelId = channelName+canvas.width
+      channelId = channelName + canvas.width+currentDate.getDate() +
+        (currentDate.getMonth() + 1) +
+        currentDate.getFullYear() +
+        currentDate.getHours() +
+        currentDate.getMinutes() +
+        currentDate.getSeconds();
       console.log("CHANNEL-NAME default::::::");
+    }
+
+  }
+  if (urlParams.has('channelGroup')) {
+    // try {
+    let cGroup = urlParams.get('channelGroup')
+
+    if (!(cGroup === "")) {
+      channelGroup = cGroup
+      console.log("CHANNEL-GROUP UPDATED::::::", channelGroup);
+    } else {
+      channelGroup = '';
+      console.log("CHANNEL-GROUP default::::::");
+    }
+
+  }
+  if (urlParams.has('channelIps')) {
+    // try {
+    let cIps = urlParams.get('channelIps')
+
+    if (!(cIps === "")) {
+      channelIps = cIps
+      console.log("CHANNEL-IPS UPDATED::::::", channelIps);
+    } else {
+      channelIps = '';
+      console.log("CHANNEL-IPS default::::::");
     }
 
   }
@@ -89,6 +132,8 @@
     id: channelId,
     type: 'video',
     channelName: channelName,
+    channelGroup: channelGroup,
+    channelIps: channelIps ,
     xres: canvas.width + '',
     yres: canvas.height + '',
     frameRate: frameRate + ''
@@ -221,13 +266,12 @@
         if (videoFlag) {
           ctx.drawImage($this, 0, 0, canvas.width, canvas.height);
           const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          videoProperties.id = channelName + '-v'
-          videoProperties.channelName = channelName
-          videoProperties.frameRate = frameRate
           const videoProperty = {
-            id: channelId + '-v',
-            channelName: channelName,
-            frameRate: frameRate,
+            id: videoProperties.id,
+            channelName: videoProperties.channelName,
+            channelGroup: videoProperties.channelGroup,
+            channelIps: videoProperties.channelIps,
+            frameRate: videoProperties.frameRate,
             data: frame.data,
             type: videoProperties.type,
             xres: videoProperties.xres,
