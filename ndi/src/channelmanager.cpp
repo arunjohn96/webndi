@@ -10,12 +10,14 @@ void CChannelManager::ListChannel(Properties& properties, const Napi::CallbackIn
         CUtil::GetProperty(properties, "channelIps"),
         stoi(CUtil::GetProperty(properties, "channelSearchMaxWaitTime", "0")),
         stoi(CUtil::GetProperty(properties, "channelSearchMaxTrials", "0"))
-    ); 
+    );
 
     Napi::Array lst_channel = Napi::Array::New(env, v_channel.size());
     for (size_t index = 0; index < v_channel.size(); index++)
     {
         lst_channel[index]=v_channel[index];
+        CUtil::log(v_channel[index]);
+
     }
     callback.Call({lst_channel}) ;
 }
@@ -32,4 +34,3 @@ void CChannelManager::ChannelControl(Properties& properties)
         channel->stream()->command(properties);
     }
 }
-

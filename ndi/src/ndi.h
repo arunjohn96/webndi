@@ -33,13 +33,21 @@ class CNdi
             while(search_trials < max_search_trials)
             {
                 search_trials++;
+
                 const NDIlib_source_t* p_sources = GetAllSources(p_finder, no_of_sources, max_wait_time);
-                for(uint32_t index=0; index<no_of_sources; index++)
+
+
+                if (p_sources)
                 {
-                    std::string channel_name = p_sources[index].p_ndi_name ;
-                    if (std::find(v_sources.begin(), v_sources.end(), channel_name) == v_sources.end())
-                    {
-                       v_sources.push_back(channel_name);
+                  for(uint32_t index=0; index<no_of_sources; index++)
+                  {
+                      std::string channel_name = p_sources[index].p_ndi_name ;
+                      CUtil::log("NDI sources ... "+ channel_name );
+
+                      if (!channel_name.empty() && std::find(v_sources.begin(), v_sources.end(), channel_name) == v_sources.end())
+                      {
+                        v_sources.push_back(channel_name);
+                      }
                     }
                 }
             }
@@ -81,15 +89,18 @@ class CNdi
                 wait_time++;
                 NDIlib_find_wait_for_sources(p_finder, 1000/* 1 second */);
                 p_sources = NDIlib_find_get_current_sources(p_finder, &no_of_sources);
-                for(uint32_t index=0; index<no_of_sources; index++)
-                {
+                if (p_sources)
+                 {
+                  for(uint32_t index=0; index<no_of_sources; index++)
+                  {
                     std::string ndi_source_name = p_sources[index].p_ndi_name ;
                     CUtil::log(" index:" + std::to_string(index) + " name:" + ndi_source_name);
                     if(ndi_source_name.find("("+channel_name+")")!=std::string::npos)
                     {
-                        p_source = &p_sources[index];
-                        break;
+                      p_source = &p_sources[index];
+                      break;
                     }
+                  }
                 }
             }
 
