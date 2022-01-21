@@ -30,6 +30,7 @@ class CNdi
             int search_trials = 0;
             uint32_t no_of_sources = 0;
             int wait_time = 0;
+            const NDIlib_source_t* p_sources;
             while(wait_time < max_wait_time)
       			{
       				wait_time++;
