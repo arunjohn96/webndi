@@ -249,8 +249,8 @@ async function listNDIFeeds(data) {
   console.log(SearchProperties);
   ndi('list-channel', SearchProperties, (data) => {
     console.log(data);
-    // x = data.filter(onlyUnique).sort();
-    x = data;
+    x = data.filter(onlyUnique).sort();
+    // x = data;
   });
 
   // console.log("X:::", x);
