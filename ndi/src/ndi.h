@@ -187,8 +187,8 @@ class CNdi
     static const NDIlib_source_t* GetAllSources(NDIlib_find_instance_t p_finder, uint32_t& no_of_sources, int wait_time)
     {
         const NDIlib_source_t* p_sources = NULL;
-        CUtil::log("Serching for all NDI sources ...");
-        while(p_finder && no_of_sources && wait_time)
+        CUtil::log("Serching for all NDI sources ... Wait Time :::"+ wait_time +"::::"+ no_of_sources);
+        while(p_finder && !no_of_sources && wait_time)
         {
             NDIlib_find_wait_for_sources(p_finder, wait_time/* 1 second */);
             p_sources = NDIlib_find_get_current_sources(p_finder, &no_of_sources);
