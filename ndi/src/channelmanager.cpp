@@ -22,9 +22,12 @@ void CChannelManager::ListChannel(Properties& properties, const Napi::CallbackIn
     callback.Call({lst_channel}) ;
 }
 
-void CChannelManager::DeleteChannel(Properties& properties)
+void CChannelManager::DeleteChannel(Properties& properties, const Napi::CallbackInfo& info)
 {
+    Napi::Env env = info.Env();
+    Napi::Function callback = info[2].As<Napi::Function>();
     CChannel::kick(CUtil::GetId(properties));
+    callback.Call({Napi::String::New(env, "Deleted successfully!")}) ;
 }
 
 void CChannelManager::ChannelControl(Properties& properties)

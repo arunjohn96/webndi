@@ -10,7 +10,7 @@ class CChannelManager
 {
 public:
     static void ListChannel(Properties& properties, const Napi::CallbackInfo& info);
-    static void DeleteChannel(Properties& properties);
+    static void DeleteChannel(Properties& properties, const Napi::CallbackInfo& info);
     static void ChannelControl(Properties& properties);
 };
 

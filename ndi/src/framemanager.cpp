@@ -4,35 +4,35 @@
 #include "channelmanager.h"
 #include "asyncmanager.h"
 
-map<string, CChannel*> CChannel::list; 
+map<string, CChannel*> CChannel::list;
 map<string, NDIlib_send_instance_t> CNdi::lst_sender;
 map<string, NDIlib_recv_instance_t> CNdi::lst_receiver;
 
-Napi::Value setFrames(const Napi::CallbackInfo& info) 
+Napi::Value setFrames(const Napi::CallbackInfo& info)
 {
 
     Properties properties;
     Napi::Object frameproperties;
 
-    if (info.Length() < 2) 
+    if (info.Length() < 2)
     {
         Napi::Error::New(info.Env(), "Missing Parameters").ThrowAsJavaScriptException();
         return info.Env().Undefined();
     }
-    
+
     if (info.Length() == 3 && !(info[2].IsArrayBuffer() || info[2].IsFunction()))
     {
         Napi::Error::New(info.Env(), "Invalid Manifest").ThrowAsJavaScriptException();
         return info.Env().Undefined();
     }
 
-    if (!info[0].IsString()) 
+    if (!info[0].IsString())
     {
         Napi::Error::New(info.Env(), "Invalid Command").ThrowAsJavaScriptException();
         return info.Env().Undefined();
     }
 
-    if (!info[1].IsObject()) 
+    if (!info[1].IsObject())
     {
         Napi::Error::New(info.Env(), "Invalid Properties").ThrowAsJavaScriptException();
         return info.Env().Undefined();
@@ -41,7 +41,7 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
     frameproperties = info[1].As<Napi::Object>();
     Napi::Array keys = frameproperties.GetPropertyNames();
 
-    for(size_t index=0; index < keys.Length(); index++) 
+    for(size_t index=0; index < keys.Length(); index++)
     {
         std::string key = (static_cast<Napi::Value>(keys[index])).ToString();
         std::string value = frameproperties.Get(key).ToString();
@@ -68,7 +68,7 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
             break;
 
         case DeleteAudioChannel:
-            CChannelManager::DeleteChannel(properties);
+            CChannelManager::DeleteChannel(properties, info);
             break;
 
         case SendAudio:
@@ -88,7 +88,7 @@ Napi::Value setFrames(const Napi::CallbackInfo& info)
             break;
 
         case DeleteVideoChannel:
-            CChannelManager::DeleteChannel(properties);
+            CChannelManager::DeleteChannel(properties, info);
             break;
 
         case SendVideo:

@@ -37,4 +37,3 @@ private:
 };
 
 #endif // CRECEIVEVIDEO_H
-

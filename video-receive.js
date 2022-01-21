@@ -194,7 +194,9 @@ async function resumeReturnFeed(videoProperties) {
 async function deleteReturnFeed(videoProperties) {
   console.log("deleteReturnFeed::::::::::::::::", videoProperties);
   ndi('channel-control', videoProperties);
-  ndi('delete-video-channel', videoProperties)
+  ndi('delete-video-channel', videoProperties, (data) => {
+    console.log(data);
+  })
 }
 
 async function setVideoProperties(data) {
@@ -203,12 +205,7 @@ async function setVideoProperties(data) {
   console.log("setVideoProperties ::::::", data, currentDate);
   if (data.hasOwnProperty('channelName')) {
     vProperty.channelName = data.channelName
-    vProperty.id = ''+data.channelName + currentDate.getDate() +
-      (currentDate.getMonth() + 1) +
-      currentDate.getFullYear() +
-      currentDate.getHours() +
-      currentDate.getMinutes() +
-      currentDate.getSeconds();
+    vProperty.id = '' + data.channelName + '-return-id';
   }
   if (data.hasOwnProperty('command')) {
     vProperty.command = data.command
@@ -219,15 +216,18 @@ async function setVideoProperties(data) {
   if (data.hasOwnProperty('channelGroup')) {
     vProperty.channelGroup = data.channelGroup
   }
+  if (data.hasOwnProperty('id')) {
+    vProperty.id = data.id
+  }
   return vProperty
 };
 
 async function listNDIFeeds() {
   const SearchProperties = {
     channelSearchMaxWaitTime: '30',
-    channelGroup:'test',
-    channelIps:'10.192.11.189,10.192.11.86',
-    channelSearchMaxTrials:'10'
+    channelGroup: 'test',
+    channelIps: '10.192.11.189,10.192.11.86',
+    channelSearchMaxTrials: '10'
   };
 
   var x;

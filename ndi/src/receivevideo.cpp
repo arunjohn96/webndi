@@ -11,12 +11,12 @@ CReceiveVideo::CReceiveVideo(Properties& properties)
     CUtil::GetProperty(m_channel_search_max_wait_time, properties, "channelSearchMaxWaitTime");   // 60
     CUtil::GetProperty(m_interval, properties, "pollInterval");   // 0.03
     CUtil::GetProperty(m_bandwidth, properties, "bandWidth");   // 0.03
-    
+
     m_receiver = NULL;
     if (!m_interval) m_interval=0.0;
-    
+
     CUtil::log(properties, "initializing receive video");
-    cout<<"  m_channel_search_max_wait_time: "<<m_channel_search_max_wait_time <<endl; 
+    cout<<"  m_channel_search_max_wait_time: "<<m_channel_search_max_wait_time <<endl;
 
     m_receiver = CNdi::CreateReceiver(m_channel_name, m_channel_group, m_channel_ips, m_channel_search_max_wait_time, m_bandwidth);
     if(!m_receiver) {
@@ -33,8 +33,10 @@ CReceiveVideo::~CReceiveVideo()
     if (m_receiver)
     {
         cout<<"destroying ndi dependencies for video channel "<<m_id<<endl;
-        NDIlib_send_destroy(m_receiver);
+        // NDIlib_send_destroy(m_receiver);
+        cout<<"After NDIlib_send_destroy "<<m_id<<endl;
         NDIlib_destroy();
+        cout<<"After NDIlib_destroy "<<m_id<<endl;
     }
 }
 
@@ -69,4 +71,3 @@ int CReceiveVideo::execute(uint8_t*& buffer, size_t& bsize)
     }
     return 0 ;
 }
-

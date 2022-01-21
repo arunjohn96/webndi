@@ -16,7 +16,7 @@ private:
     CChannel& operator = (const CChannel&) { return *this; }
     static map<string, CChannel*> list;
 public:
-    
+
     static CChannel* get(string id)
     {
         typename map<string, CChannel*>::const_iterator it = list.find(id);
@@ -33,10 +33,10 @@ public:
     static CChannel* book(CStream* stream)
     {
         CChannel* channel = nullptr;
-        if(stream) 
-        { 
+        if(stream)
+        {
             CChannel* channel = get(stream->id());
-            if(!channel) 
+            if(!channel)
             {
                 status("booking new", stream) ;
                 channel = new CChannel();
@@ -44,7 +44,7 @@ public:
                 list[stream->id()] = channel;
                 status("successfully booked", stream);
             }
-            else 
+            else
             {
                 status("already booked", stream);
             }
@@ -55,12 +55,15 @@ public:
     static void kick(string id)
     {
         CChannel* channel = get(id);
-        if (channel) 
-        {  
+        if (channel)
+        {
             status("kicking out channel ", id);
             if (channel->m_stream) delete channel->m_stream;
-            delete channel;  
-            list.erase(id); 
+            status("before delete ", id);
+            delete channel;
+            status("before erase ", id);
+            list.erase(id);
+            status("after kicking out channel ", id);
         }
     }
 
@@ -84,7 +87,6 @@ protected:
     ~CChannel() {}
 };
 
-//map<string, CChannel*> CChannel::list; 
+//map<string, CChannel*> CChannel::list;
 
 #endif // CCHANNEL_H
-

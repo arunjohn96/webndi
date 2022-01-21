@@ -15,28 +15,30 @@ class CAsyncManager : public AsyncProgressQueueWorker<uint8_t> {
             m_updator.Reset(updator, 1);
         }
 
-        ~CAsyncManager() {}
-        
+        ~CAsyncManager() {
+          std::cout << "Destructor::::::::" << '\n';
+        }
+
         void Execute(const ExecutionProgress& progress) {
             while(!m_channel->stream()->stop())
             {
                 size_t bsize = 0;
                 uint8_t* buffer = nullptr;
                 m_channel->stream()->execute(buffer, bsize);
-                if(bsize>0) { 
+                if(bsize>0) {
                     progress.Send((const uint8_t*)buffer, (size_t)bsize);
                     free(buffer);
                 }
             }
         }
 
-        void OnOK() 
+        void OnOK()
         {
             HandleScope scope(Env());
             Callback().Call({String::New(Env(), "Processing Completed!")});
         }
-        
-        void OnError(const Error &e) 
+
+        void OnError(const Error &e)
         {
             HandleScope scope(Env());
             Callback().Call({String::New(Env(), e.Message())});
@@ -46,8 +48,8 @@ class CAsyncManager : public AsyncProgressQueueWorker<uint8_t> {
         {
             HandleScope scope(Env());
             Object result = Object::New(Env());
-            result.Set("channelName", Napi::String::New(Env(), m_channel->stream()->name())); 
-            result.Set("channelGroup", Napi::String::New(Env(), m_channel->stream()->group())); 
+            result.Set("channelName", Napi::String::New(Env(), m_channel->stream()->name()));
+            result.Set("channelGroup", Napi::String::New(Env(), m_channel->stream()->group()));
             result.Set("channelId", Napi::String::New(Env(), m_channel->stream()->id()));
             result.Set("data", ArrayBuffer::New(Env(), (void*)data, bsize));
             if (!m_updator.IsEmpty()) {
@@ -60,4 +62,4 @@ class CAsyncManager : public AsyncProgressQueueWorker<uint8_t> {
         CChannel*         m_channel;
 };
 
-#endif // CASYNCMANAGER_H 
+#endif // CASYNCMANAGER_H
