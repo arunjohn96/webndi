@@ -35,9 +35,11 @@ app.use('/static', express.static('public'))
 app.get("/ndi_return/client/receiver", function(req, res) {
   res.sendFile(__dirname + "/public/returnCanvas.html");
 });
-app.get("/ndi_return/client/receiver/list", function(req, res) {
+app.post("/ndi_return/client/receiver/list", function(req, res) {
   res.setHeader('Content-Type', 'application/json');
-  listNDIFeeds()
+  res.setHeader('Content-Type', 'application/json');
+  let searchProperties = req.body;
+  listNDIFeeds(searchProperties)
     .then((value) => {
       res.send({
         message: 'success',
@@ -222,13 +224,26 @@ async function setVideoProperties(data) {
   return vProperty
 };
 
-async function listNDIFeeds() {
+async function listNDIFeeds(data) {
   const SearchProperties = {
     channelSearchMaxWaitTime: '30',
-    channelGroup: 'test',
-    channelIps: '10.192.11.189,10.192.11.86',
+    channelGroup: '',
+    channelIps: '',
     channelSearchMaxTrials: '10'
   };
+
+  if (data.hasOwnProperty('channelSearchMaxWaitTime')) {
+    SearchProperties.channelSearchMaxWaitTime = data.channelSearchMaxWaitTime
+  }
+  if (data.hasOwnProperty('channelGroup')) {
+    SearchProperties.channelGroup = data.channelGroup
+  }
+  if (data.hasOwnProperty('channelIps')) {
+    SearchProperties.channelIps = data.channelIps
+  }
+  if (data.hasOwnProperty('channelSearchMaxTrials')) {
+    SearchProperties.channelSearchMaxTrials = data.channelSearchMaxTrials
+  }
 
   var x;
   ndi('list-channel', SearchProperties, (data) => {
