@@ -29,7 +29,18 @@ class CNdi
 
             int search_trials = 0;
             uint32_t no_of_sources = 0;
-
+            int wait_time = 0;
+            while(wait_time < max_wait_time)
+      			{
+      				wait_time++;
+      				NDIlib_find_wait_for_sources(p_finder, max_wait_time/* 1 second */);
+      				p_sources = NDIlib_find_get_current_sources(p_finder, &no_of_sources);
+      				for(uint32_t index=0; index<no_of_sources; index++)
+      				{
+      					v_sources.push_back(p_sources[index].p_ndi_name) ;
+      				}
+      			}
+            /*
             while(search_trials < max_search_trials)
             {
                 search_trials++;
@@ -50,7 +61,7 @@ class CNdi
                       }
                     }
                 }
-            }
+            }*/
 
             NDIlib_find_destroy(p_finder);
         }
