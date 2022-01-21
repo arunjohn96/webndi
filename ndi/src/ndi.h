@@ -188,7 +188,7 @@ class CNdi
     {
         const NDIlib_source_t* p_sources = NULL;
         // CUtil::log("Serching for all NDI sources ... Wait Time :::"+ wait_time +"::::"+ no_of_sources);
-        std::cout << "Serching for all NDI sources ... Wait Time :::"<< wait_time <<"::::"<< no_of_sources" << '\n';
+        std::cout << "Serching for all NDI sources ... Wait Time :::"<< wait_time <<"::::"<< no_of_sources << '\n';
 
         while(p_finder && !no_of_sources && wait_time)
         {
