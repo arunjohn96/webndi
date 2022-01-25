@@ -10,6 +10,7 @@
 <body>
   <canvas id="canvas" width="640" height="360"></canvas>
   <br>
+  <button id="startNdiStreaming" type="button" name="button" onclick="startNdiStreaming()">Play</button>
   <script src="/ndi_return/socket.io/socket.io.js"></script>
   <script src="/static/config.js"></script>
 </body>
@@ -19,11 +20,12 @@
   // const socket = io.connect("http://localhost:7000");
   var canvas = document.getElementById('canvas');
   var ctx = canvas.getContext('2d');
+  var audioFlag = false;
   const socket = io.connect("http://127.0.0.1:9002", {
     path: '/ndi_return/socket.io'
   });
   // const socket = io.connect();
-  const ndiReturnSocket = io.connect({
+  const ndiReturnSocket = io.connect("http://127.0.0.1:7001",{
     path: '/ndi_return/client/socket.io'
   });
   const videoProperties = {
@@ -39,6 +41,7 @@
   const config = turnConfig;
   var startTime = new Date();
 
+  var audioCtx, frameCount, myArrayBuffer, source;
 
 
   socket.on("answer", (id, description) => {
@@ -125,6 +128,19 @@
       console.log("ERROR::::", e);
     }
   });
+  ndiReturnSocket.on("audio_receiver", data => {
+    // console.log("NDI-RETURN-SERVER::::::::::", "rgba_received::::::");
+    // ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if (audioFlag) {
+      try {
+        playAudio(data);
+
+      } catch (e) {
+        console.log("ERROR::::", e);
+      }
+
+    }
+  });
   //
   // var hello_count =0
   //
@@ -184,4 +200,29 @@
     setTimeout(drawElapsedTime, 1000 / 10);
   }
   // drawElapsedTime()
+  function startNdiStreaming() {
+    audioFlag = true
+    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+    frameCount = audioCtx.sampleRate * 2.0;
+
+  }
+
+  function playAudio(data) {
+    var audio = new Float32Array(data)
+    console.log("Audio:::", audio);
+    myArrayBuffer = audioCtx.createBuffer(2, frameCount, audioCtx.sampleRate);
+    for (var channel = 0; channel < 2; channel++) {
+      // This gives us the actual array that contains the data
+      var nowBuffering = myArrayBuffer.getChannelData(channel);
+      for (var i = 0; i < frameCount; i++) {
+        // Math.random() is in [0; 1.0]
+        // audio needs to be in [-1.0; 1.0]
+        nowBuffering[i] = audio[i];
+      }
+    }
+    var source = audioCtx.createBufferSource();
+    source.buffer = myArrayBuffer;
+    source.connect(audioCtx.destination);
+    source.start(0);
+  }
 </script>
