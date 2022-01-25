@@ -26,7 +26,14 @@ const videoProperties = {
   pollInterval: '0',
   bandWidth: 'low'
 };
-
+const audioProperties = {
+  id: 'a003',
+  type: 'audio',
+  channelName: 'test-a1',
+  channelSearchMaxWaitTime: '25',
+  command: 'stop',
+  pollInterval: '0.03'
+};
 
 const emitter = new events.EventEmitter();
 
@@ -138,27 +145,38 @@ function message(msg) {
   console.log(msg)
 }
 
-function capture(data) {
+function captureVideo(data) {
   var videoFrameIs = new Uint8Array(data.data);
   var rgbaFrame = new Uint8Array(videoFrameIs.byteLength)
   rgbaFrame.set(videoFrameIs)
-  emitter.emit('rgba', rgbaFrame)
+  // emitter.emit('rgba', rgbaFrame)
   // console.log("Data::::");
+}
+
+function captureAudio(data) {
+  var audioFrameIs = new Float32Array(data.data);
+  var audioFrame = new Float32Array(audioFrameIs.byteLength)
+  audioFrame.set(audioFrameIs)
+  emitter.emit('audio', audioFrame)
+  console.log("Audio Data::::", audioFrame.byteLength);
 }
 
 io.sockets.on("connection", socket => {
   ndiSocket = socket;
 
   socket.emit("ready")
+
   socket.on('ping', () => {
     console.log('PING::::::::::');
     // socket.to(socket.id).emit('pong', socket.id)
     // socket.emit('pong', socket.id)
   })
+
   socket.on("message", (data) => {
     console.log(data);
     socket.emit("message", 'connected to ndiReturnSocket:::::::::::')
   })
+
   socket.on("hello", () => {
     socket.emit("hello", socket.id)
   })
@@ -174,6 +192,10 @@ io.sockets.on("connection", socket => {
       socket.emit('rgba_receiver', data.buffer)
     });
 
+    emitter.on('audio', (data) => {
+      socket.emit('audio_receiver', data.buffer)
+    });
+
   });
 
   socket.on("disconnect", () => {
@@ -183,15 +205,21 @@ io.sockets.on("connection", socket => {
 })
 
 async function initializeReturnFeed(videoProperties) {
+  var audioProperty = audioProperties
+  audioProperty.id = videoProperties.id + '-audio'
+  audioProperty.channelName = videoProperties.channelName
   console.log("initializeReturnFeed::::::::::::::::", videoProperties);
+  console.log(audioProperty);
   ndi('channel-control', videoProperties);
   ndi('create-receive-video-channel', videoProperties);
-  ndi('receive-video', videoProperties, message, capture);
+  ndi('receive-video', videoProperties, message, captureVideo);
+  ndi('create-receive-audio-channel', audioProperty);
+  ndi('receive-audio', audioProperty, message, captureAudio);
 }
 async function resumeReturnFeed(videoProperties) {
   console.log("resumeReturnFeed::::::::::::::::", videoProperties);
   ndi('channel-control', videoProperties)
-  ndi('receive-video', videoProperties, message, capture);
+  ndi('receive-video', videoProperties, message, captureVideo);
 }
 async function deleteReturnFeed(videoProperties) {
   console.log("deleteReturnFeed::::::::::::::::", videoProperties);
@@ -200,7 +228,6 @@ async function deleteReturnFeed(videoProperties) {
     console.log(data);
   })
 }
-
 async function setVideoProperties(data) {
   var vProperty = videoProperties;
   var currentDate = new Date()
@@ -223,7 +250,6 @@ async function setVideoProperties(data) {
   }
   return vProperty
 };
-
 async function listNDIFeeds(data) {
   const SearchProperties = {
     channelSearchMaxWaitTime: '30',
