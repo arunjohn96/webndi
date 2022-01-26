@@ -32,7 +32,9 @@ const audioProperties = {
   channelName: 'test-a1',
   channelSearchMaxWaitTime: '25',
   command: 'stop',
-  pollInterval: '0.03'
+  pollInterval: '0.5',
+  channelGroup: '',
+  channelIps: ''
 };
 
 const emitter = new events.EventEmitter();
@@ -149,7 +151,7 @@ function captureVideo(data) {
   var videoFrameIs = new Uint8Array(data.data);
   var rgbaFrame = new Uint8Array(videoFrameIs.byteLength)
   rgbaFrame.set(videoFrameIs)
-  // emitter.emit('rgba', rgbaFrame)
+  emitter.emit('rgba', rgbaFrame)
   // console.log("Data::::");
 }
 
@@ -158,7 +160,7 @@ function captureAudio(data) {
   var audioFrame = new Float32Array(audioFrameIs.byteLength)
   audioFrame.set(audioFrameIs)
   emitter.emit('audio', audioFrame)
-  console.log("Audio Data::::", audioFrame.byteLength);
+  // console.log("Audio Data::::", audioFrame.byteLength);
 }
 
 io.sockets.on("connection", socket => {
@@ -208,6 +210,8 @@ async function initializeReturnFeed(videoProperties) {
   var audioProperty = audioProperties
   audioProperty.id = videoProperties.id + '-audio'
   audioProperty.channelName = videoProperties.channelName
+  audioProperty.channelGroup = videoProperties.channelGroup
+  audioProperty.channelIps = videoProperties.channelIps
   console.log("initializeReturnFeed::::::::::::::::", videoProperties);
   console.log(audioProperty);
   ndi('channel-control', videoProperties);
@@ -228,28 +232,6 @@ async function deleteReturnFeed(videoProperties) {
     console.log(data);
   })
 }
-async function setVideoProperties(data) {
-  var vProperty = videoProperties;
-  var currentDate = new Date()
-  console.log("setVideoProperties ::::::", data, currentDate);
-  if (data.hasOwnProperty('channelName')) {
-    vProperty.channelName = data.channelName
-    vProperty.id = '' + data.channelName + '-return-id';
-  }
-  if (data.hasOwnProperty('command')) {
-    vProperty.command = data.command
-  }
-  if (data.hasOwnProperty('channelIps')) {
-    vProperty.channelIps = data.channelIps
-  }
-  if (data.hasOwnProperty('channelGroup')) {
-    vProperty.channelGroup = data.channelGroup
-  }
-  if (data.hasOwnProperty('id')) {
-    vProperty.id = data.id
-  }
-  return vProperty
-};
 async function listNDIFeeds(data) {
   const SearchProperties = {
     channelSearchMaxWaitTime: '30',
@@ -283,6 +265,28 @@ async function listNDIFeeds(data) {
 
   return x
 }
+async function setVideoProperties(data) {
+  var vProperty = videoProperties;
+  var currentDate = new Date()
+  console.log("setVideoProperties ::::::", data, currentDate);
+  if (data.hasOwnProperty('channelName')) {
+    vProperty.channelName = data.channelName
+    vProperty.id = '' + data.channelName + '-return-id';
+  }
+  if (data.hasOwnProperty('command')) {
+    vProperty.command = data.command
+  }
+  if (data.hasOwnProperty('channelIps')) {
+    vProperty.channelIps = data.channelIps
+  }
+  if (data.hasOwnProperty('channelGroup')) {
+    vProperty.channelGroup = data.channelGroup
+  }
+  if (data.hasOwnProperty('id')) {
+    vProperty.id = data.id
+  }
+  return vProperty
+};
 
 function onlyUnique(value, index, self) {
   return self.indexOf(value) === index;

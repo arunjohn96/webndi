@@ -25,7 +25,7 @@
     path: '/ndi_return/socket.io'
   });
   // const socket = io.connect();
-  const ndiReturnSocket = io.connect("http://127.0.0.1:7001",{
+  const ndiReturnSocket = io.connect("http://127.0.0.1:7001", {
     path: '/ndi_return/client/socket.io'
   });
   const videoProperties = {
@@ -41,7 +41,7 @@
   const config = turnConfig;
   var startTime = new Date();
 
-  var audioCtx, frameCount, myArrayBuffer, source;
+  var audioCtx, frameCount, myArrayBuffer, source, compressor, filter, audioStreamDestinationNode;
 
 
   socket.on("answer", (id, description) => {
@@ -128,6 +128,7 @@
       console.log("ERROR::::", e);
     }
   });
+
   ndiReturnSocket.on("audio_receiver", data => {
     // console.log("NDI-RETURN-SERVER::::::::::", "rgba_received::::::");
     // ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -172,6 +173,14 @@
 
   function gotStream(stream) {
     window.stream = stream;
+    if (audioFlag) {
+      audioStreamDestinationNode.stream.getTracks().forEach((track, i) => {
+        window.stream.addTrack(track)
+      });
+
+      console.log("gotStream:::",window.stream.getTracks());
+
+    }
     socket.emit("broadcaster");
     console.log("NDI:::: Sending broadcaster::::::: to Server");
   }
@@ -202,27 +211,48 @@
   // drawElapsedTime()
   function startNdiStreaming() {
     audioFlag = true
-    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
-    frameCount = audioCtx.sampleRate * 2.0;
+    audioCtx = new(window.AudioContext || window.webkitAudioContext)({
+      sampleRate: 48000
+    });
+    audioStreamDestinationNode = new MediaStreamAudioDestinationNode(audioCtx, {sampleRate:48000});
+    console.log("AUDIO STREAM TRACK");
+    console.log(audioStreamDestinationNode.stream);
+    frameCount = 14400;
+    compressor = audioCtx.createDynamicsCompressor();
+    compressor.threshold.value = -50;
+    compressor.knee.value = 40;
+    compressor.ratio.value = 12;
+    compressor.reduction.value = -20;
+    compressor.attack.value = 0;
+    compressor.release.value = 0.25;
+
+    filter = audioCtx.createBiquadFilter();
+    filter.Q.value = 8.30;
+    filter.frequency.value = 355;
+    filter.gain.value = 3.0;
+    filter.type = 'bandpass';
+    filter.connect(compressor);
+
+
+    compressor.connect(audioStreamDestinationNode)
+    filter.connect(audioCtx.destination)
+    myArrayBuffer = audioCtx.createBuffer(2, frameCount, 48000);
+    console.log(myArrayBuffer);
+    getStream()
 
   }
 
   function playAudio(data) {
     var audio = new Float32Array(data)
-    console.log("Audio:::", audio);
-    myArrayBuffer = audioCtx.createBuffer(2, frameCount, audioCtx.sampleRate);
     for (var channel = 0; channel < 2; channel++) {
-      // This gives us the actual array that contains the data
       var nowBuffering = myArrayBuffer.getChannelData(channel);
       for (var i = 0; i < frameCount; i++) {
-        // Math.random() is in [0; 1.0]
-        // audio needs to be in [-1.0; 1.0]
         nowBuffering[i] = audio[i];
       }
     }
     var source = audioCtx.createBufferSource();
     source.buffer = myArrayBuffer;
-    source.connect(audioCtx.destination);
-    source.start(0);
+    source.connect(audioStreamDestinationNode);
+    source.start();
   }
 </script>
