@@ -253,17 +253,18 @@ async function listNDIFeeds(data) {
     SearchProperties.channelSearchMaxTrials = data.channelSearchMaxTrials
   }
 
-  var x;
+  var x, result;
   console.log(SearchProperties);
   ndi('list-channel', SearchProperties, (data) => {
     console.log(data);
     x = data.filter(onlyUnique).sort();
+    result = extractChannelName(x)
     // x = data;
   });
 
   // console.log("X:::", x);
 
-  return x
+  return result
 }
 async function setVideoProperties(data) {
   var vProperty = videoProperties;
@@ -291,6 +292,17 @@ async function setVideoProperties(data) {
 function onlyUnique(value, index, self) {
   return self.indexOf(value) === index;
 }
+
+function extractChannelName(value) {
+  var res = []
+  console.log("extractChannelName::::", value);
+  value.forEach((item, i) => {
+    res.push(item.split("(")[1].split(")")[0])
+  });
+  console.log("RES::::", res);
+  return res
+}
+
 
 server.listen(port, () => console.log(`Server is running on port ${port}`));
 
