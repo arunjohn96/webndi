@@ -212,9 +212,12 @@ async function initializeReturnFeed(videoProperties) {
   audioProperty.channelName = videoProperties.channelName
   audioProperty.channelGroup = videoProperties.channelGroup
   audioProperty.channelIps = videoProperties.channelIps
+  audioProperty.command = "start"
+  videoProperties.command = "start"
   console.log("initializeReturnFeed::::::::::::::::", videoProperties);
   console.log(audioProperty);
   ndi('channel-control', videoProperties);
+  ndi('channel-control', audioProperty);
   ndi('create-receive-video-channel', videoProperties);
   ndi('receive-video', videoProperties, message, captureVideo);
   ndi('create-receive-audio-channel', audioProperty);
