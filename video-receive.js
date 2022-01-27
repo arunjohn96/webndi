@@ -228,9 +228,9 @@ async function resumeReturnFeed(videoProperties) {
 async function deleteReturnFeed(videoProperties) {
   console.log("deleteReturnFeed::::::::::::::::", videoProperties);
   ndi('channel-control', videoProperties);
-  ndi('delete-video-channel', videoProperties, (data) => {
+  /*ndi('delete-video-channel', videoProperties, (data) => {
     console.log(data);
-  })
+  })*/
 }
 async function listNDIFeeds(data) {
   const SearchProperties = {
@@ -285,6 +285,9 @@ async function setVideoProperties(data) {
   }
   if (data.hasOwnProperty('id')) {
     vProperty.id = data.id
+  }
+  if (data.hasOwnProperty('type')) {
+    vProperty.type = data.type
   }
   return vProperty
 };
