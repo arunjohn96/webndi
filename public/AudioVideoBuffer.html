@@ -250,7 +250,6 @@
   function startNdiStreaming() {
     videoFlag = true
     audioFlag = true
-    sendAudio();
   }
 
   function stopNdiStreaming() {
@@ -283,6 +282,7 @@
         setTimeout(loop, frameRate); // drawing at 30fps
       }
     })();
+    sendAudio();
   }, 0);
 
   function updateSource(audioStream) {
