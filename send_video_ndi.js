@@ -39,13 +39,12 @@ const port = process.env.PORT || 8000;
 // SOCKET URLS
 io.sockets.on("error", e => console.log(e));
 io.sockets.on("connection", socket => {
-  socket.on('audio frames', (audio, channelName) => {
-    if (audioProperties.id != channelName) {
+  socket.on('audio frames', (audio, channelName, channelGroup) => {
+    if (!(audioProperties.id == channelName && audioProperties.channelName == channelGroup)) {
       audioProperties.id = channelName
       audioProperties.channelName = channelName
       // audioProperties.channelIps = videoProperties.channelIps
-      audioProperties.channelGroup = videoProperties.channelGroup
-
+      audioProperties.channelGroup = channelGroup
       ndi('create-send-audio-channel', audioProperties);
     } else {
       var audioFrameIs = new Uint8Array(audio.data);

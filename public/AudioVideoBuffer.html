@@ -346,7 +346,7 @@
           mainAudioProcessor.port.onmessage = (e) => {
             if (audioFlag) {
               // console.log(e.data);
-              ndiSocket.emit('audio frames', e.data, channelName)
+              ndiSocket.emit('audio frames', e.data, channelName, channelGroup)
             }
           }
         });
