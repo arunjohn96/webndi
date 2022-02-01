@@ -40,7 +40,7 @@ const port = process.env.PORT || 8000;
 io.sockets.on("error", e => console.log(e));
 io.sockets.on("connection", socket => {
   socket.on('audio frames', (audio, channelName, channelGroup) => {
-    if (!(audioProperties.id == channelName && audioProperties.channelName == channelGroup)) {
+    if (!(audioProperties.id == channelName && audioProperties.channelGroup == channelGroup)) {
       audioProperties.id = channelName
       audioProperties.channelName = channelName
       // audioProperties.channelIps = videoProperties.channelIps
