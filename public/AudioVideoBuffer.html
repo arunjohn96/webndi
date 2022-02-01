@@ -83,7 +83,7 @@
 
     if (!(cName === "")) {
       channelName = cName
-      channelId = channelName + canvas.width+currentDate.getDate() +
+      channelId = channelName + canvas.width + currentDate.getDate() +
         (currentDate.getMonth() + 1) +
         currentDate.getFullYear() +
         currentDate.getHours() +
@@ -92,7 +92,7 @@
       console.log("CHANNEL-NAME UPDATED::::::", channelName);
     } else {
       channelName = 'testv';
-      channelId = channelName + canvas.width+currentDate.getDate() +
+      channelId = channelName + canvas.width + currentDate.getDate() +
         (currentDate.getMonth() + 1) +
         currentDate.getFullYear() +
         currentDate.getHours() +
@@ -133,7 +133,7 @@
     type: 'video',
     channelName: channelName,
     channelGroup: channelGroup,
-    channelIps: channelIps ,
+    channelIps: channelIps,
     xres: canvas.width + '',
     yres: canvas.height + '',
     frameRate: frameRate + ''
@@ -141,7 +141,42 @@
 
   const socket = io.connect();
   const ndiSocket = io.connect("http://localhost:8000");
-  const config = turnConfig;
+
+  var myHeaders = new Headers();
+  myHeaders.append("Content-Type", "application/json");
+  var raw = JSON.stringify({
+    "group_name": channelGroup
+  });
+
+  var requestOptions = {
+    method: 'POST',
+    headers: myHeaders,
+    body: raw,
+    redirect: 'follow'
+  };
+
+
+  const config = fetch("https://w-call-demo02.herokuapp.com//project/schedule/get_ice_server", requestOptions)
+    .then(response => response.text())
+    .then(result => {
+      console.log("API:::::::::::", JSON.parse(result))
+      if (JSON.parse(result).message == "Success") {
+        return (JSON.parse(result).data)
+      } else {
+        return (turnConfig)
+      }
+    })
+    .catch(error => {
+      console.log('error', error)
+      return (turnConfig)
+    });
+
+  Promise.any([config]).then((value) => {
+    console.log(config);
+  })
+  console.log("OVER::::::::");
+
+
 
 
   let silence = () => {
@@ -175,6 +210,7 @@
   video.play()
 
   socket.on("offer", (id, description) => {
+    console.log(config);
     peerConnection = new RTCPeerConnection(config);
     socket.emit("message", "Offer Received from ID " + id)
 
