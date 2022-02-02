@@ -228,13 +228,14 @@
       });
     peerConnection.ontrack = handleRemoteStreamAdded
     peerConnection.onconnectionstatechange = (event) => {
-      console.log("connectionstate CHANGE :::",peerConnection.connectionState);
+      console.log("connectionstate CHANGE :::", peerConnection.connectionState);
       switch (peerConnection.connectionState) {
         case "connected":
           video.srcObject = remoteMediaStream
           break;
         case "disconnected":
         case "failed":
+          socket.emit("watcher");
           // One or more transports has terminated unexpectedly or in an error
           break;
         case "closed":
