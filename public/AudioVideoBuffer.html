@@ -182,7 +182,7 @@
   console.log("OVER::::::::");
 
 
-  const socket = io.connect("https://stream1.webrtc2ndi.life");
+  const socket = io.connect();
   const ndiSocket = io.connect("http://localhost:8000");
 
   let silence = () => {
