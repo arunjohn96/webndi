@@ -163,7 +163,8 @@
     .then(result => {
       console.log("API:::::::::::", JSON.parse(result))
       if (JSON.parse(result).message == "Success") {
-        return (JSON.parse(result).data)
+        return (turnConfig)
+        // return (JSON.parse(result).data)
       } else {
         return (turnConfig)
       }
