@@ -30,6 +30,8 @@
   let peerConnection;
   var videoFlag = false;
   var audioFlag = false;
+  var remoteMediaStream = new MediaStream()
+
   const queryString = window.location.search;
   console.log("URL:::::::::::", queryString);
   const urlParams = new URLSearchParams(queryString);
@@ -224,6 +226,21 @@
 
       });
     peerConnection.ontrack = handleRemoteStreamAdded
+    peerConnection.onconnectionstatechange = (event) => {
+      console.log("connectionstate CHANGE :::",peerConnection.connectionState);
+      switch (peerConnection.connectionState) {
+        case "connected":
+          video.srcObject = remoteMediaStream
+          break;
+        case "disconnected":
+        case "failed":
+          // One or more transports has terminated unexpectedly or in an error
+          break;
+        case "closed":
+          // The connection has been closed
+          break;
+      }
+    }
     peerConnection.onicecandidate = event => {
       if (event.candidate) {
         socket.emit("message", "IceCandidate received from ID " + id)
@@ -263,12 +280,19 @@
     console.log("Update channelName to :::::::::", channelName);
   })
 
+
   function handleRemoteStreamAdded(event) {
     console.log('Remote stream added.');
-    video.srcObject = event.streams[0];
+    remoteMediaStream.getTracks().forEach((track, i) => {
+      remoteMediaStream.removeTrack(track)
+    });
+
     event.streams[0].getTracks().forEach((track, i) => {
+      remoteMediaStream.addTrack(track)
       console.log(i, "Details of newly added track ::::", track, track.getSettings());
     });
+    console.log("Remote Media Stream ::::", remoteMediaStream);
+
     audioStream.getTracks().forEach((track, i) => {
       audioStream.removeTrack(track)
     });
