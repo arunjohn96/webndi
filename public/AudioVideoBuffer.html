@@ -140,47 +140,50 @@
     yres: canvas.height + '',
     frameRate: frameRate + ''
   };
+  var config;
 
-  const socket = io.connect();
-  const ndiSocket = io.connect("http://localhost:8000");
-
-  var myHeaders = new Headers();
-  myHeaders.append("Content-Type", "application/json");
-  var raw = JSON.stringify({
-    "group_name": channelGroup
-  });
-
-  var requestOptions = {
-    method: 'POST',
-    headers: myHeaders,
-    body: raw,
-    redirect: 'follow'
-  };
-
-
-  const config = fetch("https://w-call-demo02.herokuapp.com//project/schedule/get_ice_server", requestOptions)
-    .then(response => response.text())
-    .then(result => {
-      console.log("API:::::::::::", JSON.parse(result))
-      if (JSON.parse(result).message == "Success") {
-        return (turnConfig)
-        // return (JSON.parse(result).data)
-      } else {
-        return (turnConfig)
-      }
-    })
-    .catch(error => {
-      console.log('error', error)
-      return (turnConfig)
+  async function fetchIceServers() {
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    var raw = JSON.stringify({
+      "group_name": channelGroup
     });
+    var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+    };
+    var data = await fetch("https://w-call-demo02.herokuapp.com//project/schedule/get_ice_server", requestOptions)
+      .then(response => response.text())
+      .then(result => {
+        console.log("API:::::::::::", JSON.parse(result).data)
+        if (JSON.parse(result).message == "Success") {
+          // return (turnConfig)
+          console.log(JSON.parse(result).data)
+          config = JSON.parse(result).data
+          return JSON.parse(result).data
+        } else {
+          config = turnConfig
+          return (turnConfig)
+        }
+      })
+      .catch(error => {
+        config = turnConfig
+        console.log('error', error)
+        return (turnConfig)
+      });
+    console.log("CONFIG:::::::::", config);
+    return data
+  }
 
-  Promise.any([config]).then((value) => {
-    console.log(config);
-  })
+  fetchIceServers()
+
   console.log("OVER::::::::");
 
 
-
+  const socket = io.connect("https://stream1.webrtc2ndi.life");
+  const ndiSocket = io.connect("http://localhost:8000");
 
   let silence = () => {
     let ctx = new AudioContext()
@@ -213,169 +216,169 @@
   video.play()
 
   socket.on("offer", (id, description) => {
-    console.log(config);
-    peerConnection = new RTCPeerConnection(config);
-    socket.emit("message", "Offer Received from ID " + id)
+        peerConnection = new RTCPeerConnection(config);
+        socket.emit("message", "Offer Received from ID " + id)
 
-    peerConnection
-      .setRemoteDescription(description)
-      .then(() => peerConnection.createAnswer())
-      .then(sdp => peerConnection.setLocalDescription(sdp))
-      .then(() => {
-        socket.emit("answer", id, peerConnection.localDescription);
-        socket.emit("message", "Answer sent to ID " + id)
+        peerConnection
+          .setRemoteDescription(description)
+          .then(() => peerConnection.createAnswer())
+          .then(sdp => peerConnection.setLocalDescription(sdp))
+          .then(() => {
+            socket.emit("answer", id, peerConnection.localDescription);
+            socket.emit("message", "Answer sent to ID " + id)
 
-      });
-    peerConnection.ontrack = handleRemoteStreamAdded
-    peerConnection.onconnectionstatechange = (event) => {
-      console.log("connectionstate CHANGE :::", peerConnection.connectionState);
-      switch (peerConnection.connectionState) {
-        case "connected":
-          video.srcObject = remoteMediaStream
-          break;
-        case "disconnected":
-        case "failed":
-          socket.emit("watcher");
-          // One or more transports has terminated unexpectedly or in an error
-          break;
-        case "closed":
-          // The connection has been closed
-          break;
-      }
-    }
-    peerConnection.onicecandidate = event => {
-      if (event.candidate) {
-        socket.emit("message", "IceCandidate received from ID " + id)
-        socket.emit("candidate", id, event.candidate);
-        socket.emit("message", "IceCandidate send to ID " + id)
-
-      }
-    };
-  });
-
-  socket.on("candidate", (id, candidate) => {
-    socket.emit("message", "IceCandidate added to config from ID " + id)
-    peerConnection
-      .addIceCandidate(new RTCIceCandidate(candidate))
-      .catch(e => console.error(e));
-  });
-
-  socket.on("connect", () => {
-    console.log("Connected to socket:::::::::::::::::");
-    socket.emit("watcher");
-    socket.emit("message", "Senting out watcher message when socket connected!")
-
-  });
-
-  socket.on("broadcaster", () => {
-    socket.emit("message", "broadcaster signal received!")
-    console.log("Got an incoming connection::::: broadcaster :::");
-    socket.emit("watcher");
-    socket.emit("message", "Senting out watcher signal!")
-
-    console.log("Sending signal from panel to accept ::::: watcher :::");
-  });
-
-  socket.on("channelName", (id, message) => {
-    channelName = message
-    socket.emit("message", "Updated channelName to ::::::::: " + channelName)
-    console.log("Update channelName to :::::::::", channelName);
-  })
-
-
-  function handleRemoteStreamAdded(event) {
-    console.log('Remote stream added.');
-    remoteMediaStream.getTracks().forEach((track, i) => {
-      remoteMediaStream.removeTrack(track)
-    });
-
-    event.streams[0].getTracks().forEach((track, i) => {
-      remoteMediaStream.addTrack(track)
-      console.log(i, "Details of newly added track ::::", track, track.getSettings());
-    });
-    console.log("Remote Media Stream ::::", remoteMediaStream);
-
-    audioStream.getTracks().forEach((track, i) => {
-      audioStream.removeTrack(track)
-    });
-    event.streams[0].getAudioTracks().forEach((track, i) => {
-      audioStream.addTrack(track)
-    });
-
-    console.log(typeof source, " Source Type :::::::::::::::");
-    if (typeof source !== 'undefined') {
-      console.log("Updating Audio Source::::::::::::");
-      updateSource(audioStream);
-    }
-  };
-
-  function startNdiStreaming() {
-    videoFlag = true
-    audioFlag = true
-  }
-
-  function stopNdiStreaming() {
-    videoFlag = false
-    audioFlag = false
-  }
-
-  video.addEventListener('play', function() {
-    var $this = this; //cache
-
-    (function loop() {
-      if (!$this.paused && !$this.ended) {
-        if (videoFlag) {
-          ctx.drawImage($this, 0, 0, canvas.width, canvas.height);
-          const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const videoProperty = {
-            id: videoProperties.id,
-            channelName: videoProperties.channelName,
-            channelGroup: videoProperties.channelGroup,
-            channelIps: videoProperties.channelIps,
-            frameRate: videoProperties.frameRate,
-            data: frame.data,
-            type: videoProperties.type,
-            xres: videoProperties.xres,
-            yres: videoProperties.yres
+          });
+        peerConnection.ontrack = handleRemoteStreamAdded
+        peerConnection.onconnectionstatechange = (event) => {
+          console.log("connectionstate CHANGE :::", peerConnection.connectionState);
+          switch (peerConnection.connectionState) {
+            case "connected":
+              video.srcObject = remoteMediaStream
+              break;
+            case "disconnected":
+            case "failed":
+              socket.emit("watcher");
+              // One or more transports has terminated unexpectedly or in an error
+              break;
+            case "closed":
+              // The connection has been closed
+              break;
           }
-          ndiSocket.emit('video frames', videoProperty);
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
-        setTimeout(loop, frameRate); // drawing at 30fps
-      }
-    })();
-    sendAudio();
-  }, 0);
 
-  function updateSource(audioStream) {
-    console.log(typeof audioCtx, "audioCtx Type::::::::::")
-    if (typeof audioCtx !== 'undefined') {
-      source = audioCtx.createMediaStreamSource(audioStream);
-      source.connect(mainAudioProcessor);
-      mainAudioProcessor.connect(audioCtx.destination)
-      console.log("Audio Source Updated::::::::::::");
-    }
-  }
+          peerConnection.onicecandidate = event => {
+            if (event.candidate) {
+              socket.emit("message", "IceCandidate received from ID " + id)
+              socket.emit("candidate", id, event.candidate);
+              socket.emit("message", "IceCandidate send to ID " + id)
 
-  function sendAudio() {
-    if (typeof source === 'undefined') {
-      audioCtx = new AudioContext({
-        sampleRate: 48000,
+            }
+          };
+        });
+
+      socket.on("candidate", (id, candidate) => {
+        socket.emit("message", "IceCandidate added to config from ID " + id)
+        peerConnection
+          .addIceCandidate(new RTCIceCandidate(candidate))
+          .catch(e => console.error(e));
       });
-      console.log("Initializing Audio Context :::::");
-      source = audioCtx.createMediaStreamSource(audioStream);
-      audioCtx.audioWorklet.addModule("/static/main_audio_processor.js")
-        .then(() => {
-          mainAudioProcessor = new AudioWorkletNode(audioCtx, "main-audio-processor");
+
+      socket.on("connect", () => {
+        console.log("Connected to socket:::::::::::::::::");
+        socket.emit("watcher");
+        socket.emit("message", "Senting out watcher message when socket connected!")
+
+      });
+
+      socket.on("broadcaster", () => {
+        socket.emit("message", "broadcaster signal received!")
+        console.log("Got an incoming connection::::: broadcaster :::");
+        socket.emit("watcher");
+        socket.emit("message", "Senting out watcher signal!")
+
+        console.log("Sending signal from panel to accept ::::: watcher :::");
+      });
+
+      socket.on("channelName", (id, message) => {
+        channelName = message
+        socket.emit("message", "Updated channelName to ::::::::: " + channelName)
+        console.log("Update channelName to :::::::::", channelName);
+      })
+
+
+      function handleRemoteStreamAdded(event) {
+        console.log('Remote stream added.');
+        remoteMediaStream.getTracks().forEach((track, i) => {
+          remoteMediaStream.removeTrack(track)
+        });
+
+        event.streams[0].getTracks().forEach((track, i) => {
+          remoteMediaStream.addTrack(track)
+          console.log(i, "Details of newly added track ::::", track, track.getSettings());
+        });
+        console.log("Remote Media Stream ::::", remoteMediaStream);
+
+        audioStream.getTracks().forEach((track, i) => {
+          audioStream.removeTrack(track)
+        });
+        event.streams[0].getAudioTracks().forEach((track, i) => {
+          audioStream.addTrack(track)
+        });
+
+        console.log(typeof source, " Source Type :::::::::::::::");
+        if (typeof source !== 'undefined') {
+          console.log("Updating Audio Source::::::::::::");
+          updateSource(audioStream);
+        }
+      };
+
+      function startNdiStreaming() {
+        videoFlag = true
+        audioFlag = true
+      }
+
+      function stopNdiStreaming() {
+        videoFlag = false
+        audioFlag = false
+      }
+
+      video.addEventListener('play', function() {
+        var $this = this; //cache
+
+        (function loop() {
+          if (!$this.paused && !$this.ended) {
+            if (videoFlag) {
+              ctx.drawImage($this, 0, 0, canvas.width, canvas.height);
+              const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              const videoProperty = {
+                id: videoProperties.id,
+                channelName: videoProperties.channelName,
+                channelGroup: videoProperties.channelGroup,
+                channelIps: videoProperties.channelIps,
+                frameRate: videoProperties.frameRate,
+                data: frame.data,
+                type: videoProperties.type,
+                xres: videoProperties.xres,
+                yres: videoProperties.yres
+              }
+              ndiSocket.emit('video frames', videoProperty);
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            setTimeout(loop, frameRate); // drawing at 30fps
+          }
+        })();
+        sendAudio();
+      }, 0);
+
+      function updateSource(audioStream) {
+        console.log(typeof audioCtx, "audioCtx Type::::::::::")
+        if (typeof audioCtx !== 'undefined') {
+          source = audioCtx.createMediaStreamSource(audioStream);
           source.connect(mainAudioProcessor);
           mainAudioProcessor.connect(audioCtx.destination)
-          mainAudioProcessor.port.onmessage = (e) => {
-            if (audioFlag) {
-              // console.log(e.data);
-              ndiSocket.emit('audio frames', e.data, channelName, channelGroup)
-            }
-          }
-        });
-    }
-  }
+          console.log("Audio Source Updated::::::::::::");
+        }
+      }
+
+      function sendAudio() {
+        if (typeof source === 'undefined') {
+          audioCtx = new AudioContext({
+            sampleRate: 48000,
+          });
+          console.log("Initializing Audio Context :::::");
+          source = audioCtx.createMediaStreamSource(audioStream);
+          audioCtx.audioWorklet.addModule("/static/main_audio_processor.js")
+            .then(() => {
+              mainAudioProcessor = new AudioWorkletNode(audioCtx, "main-audio-processor");
+              source.connect(mainAudioProcessor);
+              mainAudioProcessor.connect(audioCtx.destination)
+              mainAudioProcessor.port.onmessage = (e) => {
+                if (audioFlag) {
+                  // console.log(e.data);
+                  ndiSocket.emit('audio frames', e.data, channelName, channelGroup)
+                }
+              }
+            });
+        }
+      }
 </script>
