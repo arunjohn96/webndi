@@ -41,7 +41,7 @@
   const config = turnConfig;
   var startTime = new Date();
 
-  var audioCtx, frameCount, myArrayBuffer, source, compressor, filter, audioStreamDestinationNode;
+  var audioCtx, frameCount, myArrayBuffer, audioStreamDestinationNode;
 
 
   socket.on("answer", (id, description) => {
@@ -214,29 +214,11 @@
       sampleRate: 48000
     });
     audioStreamDestinationNode = new MediaStreamAudioDestinationNode(audioCtx, {sampleRate:48000});
+    setTimeout(()=>{
+      console.log("time:::");
+      getStream()
+    }, 4000)
 
-    console.log("AUDIO STREAM TRACK");
-    console.log(audioStreamDestinationNode.stream);
-    compressor = audioCtx.createDynamicsCompressor();
-    compressor.threshold.value = -50;
-    compressor.knee.value = 40;
-    compressor.ratio.value = 12;
-    compressor.reduction.value = -20;
-    compressor.attack.value = 0;
-    compressor.release.value = 0.25;
-
-    filter = audioCtx.createBiquadFilter();
-    filter.Q.value = 8.30;
-    filter.frequency.value = 355;
-    filter.gain.value = 3.0;
-    filter.type = 'bandpass';
-    filter.connect(compressor);
-
-
-    compressor.connect(audioStreamDestinationNode)
-    filter.connect(audioCtx.destination)
-    console.log(myArrayBuffer);
-    getStream()
 
   }
 
