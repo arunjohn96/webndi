@@ -41,7 +41,7 @@
   const config = turnConfig;
   var startTime = new Date();
 
-  var audioCtx, frameCount, myArrayBuffer, audioStreamDestinationNode;
+  var audioCtx, frameCount, myArrayBuffer, source, compressor, filter, audioStreamDestinationNode;
 
 
   socket.on("answer", (id, description) => {
@@ -130,6 +130,7 @@
   });
 
   ndiReturnSocket.on("audio_receiver", data => {
+    // console.log("NDI-RETURN-SERVER::::::::::", "rgba_received::::::");
     // ctx.clearRect(0, 0, canvas.width, canvas.height)
     if (audioFlag) {
       try {
@@ -214,26 +215,44 @@
       sampleRate: 48000
     });
     audioStreamDestinationNode = new MediaStreamAudioDestinationNode(audioCtx, {sampleRate:48000});
-    setTimeout(()=>{
-      console.log("time:::");
-      getStream()
-    }, 4000)
+    console.log("AUDIO STREAM TRACK");
+    console.log(audioStreamDestinationNode.stream);
+    frameCount = 14400;
+    compressor = audioCtx.createDynamicsCompressor();
+    compressor.threshold.value = -50;
+    compressor.knee.value = 40;
+    compressor.ratio.value = 12;
+    compressor.reduction.value = -20;
+    compressor.attack.value = 0;
+    compressor.release.value = 0.25;
 
+    filter = audioCtx.createBiquadFilter();
+    filter.Q.value = 8.30;
+    filter.frequency.value = 355;
+    filter.gain.value = 3.0;
+    filter.type = 'bandpass';
+    filter.connect(compressor);
+
+
+    compressor.connect(audioStreamDestinationNode)
+    filter.connect(audioCtx.destination)
+    myArrayBuffer = audioCtx.createBuffer(2, frameCount, 48000);
+    console.log(myArrayBuffer);
+    getStream()
 
   }
 
   function playAudio(data) {
     var audio = new Float32Array(data)
-    // console.log(audio);
-    myArrayBuffer = audioCtx.createBuffer(2, audio.length, 48000);
     for (var channel = 0; channel < 2; channel++) {
       var nowBuffering = myArrayBuffer.getChannelData(channel);
-      for (var i = 0; i < audio.length; i++) {
+      for (var i = 0; i < frameCount; i++) {
         nowBuffering[i] = audio[i];
       }
     }
-    const sourceNode = new AudioBufferSourceNode(audioCtx, { buffer: myArrayBuffer })
-    sourceNode.connect(audioStreamDestinationNode);
-    sourceNode.start(0);
+    var source = audioCtx.createBufferSource();
+    source.buffer = myArrayBuffer;
+    source.connect(audioStreamDestinationNode);
+    source.start();
   }
 </script>
