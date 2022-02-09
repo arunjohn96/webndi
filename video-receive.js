@@ -32,7 +32,7 @@ const audioProperties = {
   channelName: 'test-a1',
   channelSearchMaxWaitTime: '25',
   command: 'stop',
-  pollInterval: '0.5',
+  pollInterval: '1',
   channelGroup: '',
   channelIps: ''
 };
@@ -155,13 +155,20 @@ function captureVideo(data) {
   // console.log("Data::::");
 }
 
+var frame_count = 0;
 function captureAudio(data) {
   var audioFrameIs = new Float32Array(data.data);
   var audioFrame = new Float32Array(audioFrameIs.byteLength)
   audioFrame.set(audioFrameIs)
   emitter.emit('audio', audioFrame)
-  // console.log("Audio Data::::", audioFrame.byteLength);
+  frame_count++;
+  console.log("Audio Data::::", audioFrame.byteLength, frame_count);
 }
+
+setInterval(()=>{
+  console.log("Audio Frame Rate::::::::::::::", frame_count);
+  frame_count = 0;
+},1000)
 
 io.sockets.on("connection", socket => {
   ndiSocket = socket;

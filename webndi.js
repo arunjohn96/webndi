@@ -28,6 +28,10 @@ app.get("/stream/video", function(req, res) {
 
   res.sendFile(__dirname + "/public/AudioVideoBuffer.html");
 });
+app.get("/stream/hd_video", function(req, res) {
+
+  res.sendFile(__dirname + "/public/AudioVideoBuffer2.html");
+});
 app.get("/stream/video_demo", function(req, res) {
   res.sendFile(__dirname + "/public/browser3.html");
 });

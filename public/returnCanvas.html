@@ -130,7 +130,6 @@
   });
 
   ndiReturnSocket.on("audio_receiver", data => {
-    // console.log("NDI-RETURN-SERVER::::::::::", "rgba_received::::::");
     // ctx.clearRect(0, 0, canvas.width, canvas.height)
     if (audioFlag) {
       try {
@@ -217,7 +216,6 @@
     audioStreamDestinationNode = new MediaStreamAudioDestinationNode(audioCtx, {sampleRate:48000});
     console.log("AUDIO STREAM TRACK");
     console.log(audioStreamDestinationNode.stream);
-    frameCount = 14400;
     compressor = audioCtx.createDynamicsCompressor();
     compressor.threshold.value = -50;
     compressor.knee.value = 40;
@@ -236,13 +234,14 @@
 
     compressor.connect(audioStreamDestinationNode)
     filter.connect(audioCtx.destination)
-    myArrayBuffer = audioCtx.createBuffer(2, frameCount, 48000);
     console.log(myArrayBuffer);
     getStream()
 
   }
 
   function playAudio(data) {
+    frameCount = data.byteLength;
+    myArrayBuffer = audioCtx.createBuffer(2, frameCount/30, 48000);
     var audio = new Float32Array(data)
     for (var channel = 0; channel < 2; channel++) {
       var nowBuffering = myArrayBuffer.getChannelData(channel);
@@ -252,7 +251,7 @@
     }
     var source = audioCtx.createBufferSource();
     source.buffer = myArrayBuffer;
-    source.connect(audioStreamDestinationNode);
+    source.connect(compressor);
     source.start();
   }
 </script>

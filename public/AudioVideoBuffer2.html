@@ -38,6 +38,7 @@
   for (const key of urlParams.keys()) console.log("URL_PARAM::::", key);
   var canvas = document.getElementById('Bot');
   var ctx = canvas.getContext('2d');
+  var video = document.getElementById('VideoSource');
 
   if (urlParams.has('canvasWidth') && urlParams.has('canvasHeight')) {
     // try {
@@ -47,10 +48,14 @@
     if (!(isNaN(canvasH) && isNaN(canvasW))) {
       canvas.width = canvasW
       canvas.height = canvasH
+      video.width = canvasW
+      video.height = canvasH
       console.log("CANVAS DIMENSIONS UPDATED::::::", canvas.width, canvas.height);
     } else {
       canvas.width = 1088
       canvas.height = 612
+      video.width = 1088
+      video.height = 612
       console.log("CANVAS DIMENSIONS default::::::", canvas.width, canvas.height);
     }
 
@@ -65,9 +70,14 @@
     currentDate.getHours() +
     currentDate.getMinutes() +
     currentDate.getSeconds();
-
+  var ExternalUserId = '';
+  var meetingId = '';
+  var accessKeyId = '';
+  var secretAccessKey = '';
+  var BucketName = '';
+  var s3UploadFlag = false;
+  var videoRecorder;
   var frameRate = 1000 / 16;
-
   if (urlParams.has('frameRate')) {
     // try {
     let fRate = 1000 / parseInt(urlParams.get('frameRate'))
@@ -132,7 +142,66 @@
     }
 
   }
+  if (urlParams.has('external_user_id')) {
+    // try {
+    let eId = urlParams.get('external_user_id')
 
+    if (!(eId === "")) {
+      ExternalUserId = eId
+      console.log("EXTERNAL-USER-ID UPDATED::::::", ExternalUserId);
+    } else {
+      ExternalUserId = '';
+      console.log("EXTERNAL-USER-ID default::::::");
+    }
+  }
+  if (urlParams.has('meetingId')) {
+    // try {
+    let mId = urlParams.get('meetingId')
+
+    if (!(mId === "")) {
+      meetingId = mId
+      console.log("MEETING-ID UPDATED::::::", meetingId);
+    } else {
+      meetingId = '';
+      console.log("MEETING-ID default::::::");
+    }
+  }
+  if (urlParams.has('accessKeyId')) {
+    // try {
+    let aId = urlParams.get('accessKeyId')
+
+    if (!(aId === "")) {
+      accessKeyId = aId
+      console.log("ACCESS-KEY-ID UPDATED::::::", accessKeyId);
+    } else {
+      accessKeyId = '';
+      console.log("ACCESS-KEY-ID default::::::");
+    }
+  }
+  if (urlParams.has('secretAccessKey')) {
+    // try {
+    let sId = urlParams.get('secretAccessKey')
+
+    if (!(sId === "")) {
+      secretAccessKey = sId
+      console.log("SECRET-ACCESS-ID UPDATED::::::", secretAccessKey);
+    } else {
+      secretAccessKey = '';
+      console.log("SECRET-ACCESS-ID default::::::");
+    }
+  }
+  if (urlParams.has('BucketName')) {
+    // try {
+    let bId = urlParams.get('BucketName')
+
+    if (!(bId === "")) {
+      BucketName = bId
+      console.log("BUCKET-ID UPDATED::::::", BucketName);
+    } else {
+      BucketName = '';
+      console.log("BUCKET-ID default::::::");
+    }
+  }
   var videoProperties = {
     id: channelId,
     type: 'video',
@@ -144,6 +213,10 @@
     frameRate: frameRate + ''
   };
   var config;
+
+  if (!(ExternalUserId === "") && !(meetingId === "") && !(accessKeyId === "") && !(secretAccessKey === "") && !(BucketName === "")) {
+    s3UploadFlag = true;
+  }
 
   async function fetchIceServers() {
     var myHeaders = new Headers();
@@ -212,7 +285,6 @@
     });
   }
   let blackSilence = () => new MediaStream([black(), silence()]);
-  var video = document.getElementById('VideoSource');
   var audioStream = new MediaStream([silence()])
   var dummyStream = blackSilence();
   video.srcObject = dummyStream;
@@ -320,8 +392,6 @@
   function startNdiStreaming() {
     videoFlag = true
     audioFlag = true
-    sendAudio();
-
   }
 
   function stopNdiStreaming() {
@@ -331,29 +401,40 @@
 
   video.addEventListener('play', function() {
     var $this = this; //cache
+    const trackProcessor = new MediaStreamTrackProcessor({
+      track: canvas.captureStream(frameRate).getVideoTracks()[0]
+    });
 
-    (function loop() {
+    const reader = trackProcessor.readable.getReader();
+
+    (async function loop() {
       if (!$this.paused && !$this.ended) {
         if (videoFlag) {
-          ctx.drawImage($this, 0, 0, canvas.width, canvas.height);
-          const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+          ctx.drawImage($this, 0, 0, parseInt(videoProperties.xres), parseInt(videoProperties.yres));
+          // const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const result = await reader.read();
+          const frame = new Uint8ClampedArray(parseInt(videoProperties.xres) * parseInt(videoProperties.yres) * 4)
+          result.value.copyTo(frame);
           const videoProperty = {
             id: videoProperties.id,
             channelName: videoProperties.channelName,
             channelGroup: videoProperties.channelGroup,
             channelIps: videoProperties.channelIps,
             frameRate: videoProperties.frameRate,
-            data: frame.data,
+            data: frame,
             type: videoProperties.type,
             xres: videoProperties.xres,
             yres: videoProperties.yres
           }
           ndiSocket.emit('video frames', videoProperty);
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          // ctx.clearRect(0, 0, canvas.width, canvas.height);
+          result.value.close()
         }
         setTimeout(loop, frameRate); // drawing at 30fps
       }
     })();
+    sendAudio();
   }, 0);
 
   function updateSource(audioStream) {
@@ -380,11 +461,82 @@
           mainAudioProcessor.connect(audioCtx.destination)
           mainAudioProcessor.port.onmessage = (e) => {
             if (audioFlag) {
-              // console.log("audio");
+              // console.log(e.data);
               ndiSocket.emit('audio frames', e.data, channelName, channelGroup)
             }
           }
         });
     }
+  }
+
+  function recordVideo(stream) {
+    videoRecorder = new MediaRecorder(stream, {
+      mimeType: "video/webm; codecs=vp9"
+    });
+    videoRecorder.ondataavailable = handleRecorderData
+    videoRecorder.start();
+    setTimeout(function() {
+      if (videoRecorder.state == "recording")
+        videoRecorder.stop();
+
+      if (s3UploadFlag)
+        recordVideo(remoteMediaStream);
+    }, 5000); // 10 seconds videos
+  }
+
+  function handleRecorderData(event) {
+    console.log(event.data.size);
+    if (event.data.size > 0) {
+      console.log("recorder data available");
+      console.log(event.data);
+      var uploadPath = `captures/${meetingId}/video`
+      var videoChunks = []
+      videoChunks.push(event.data)
+      if (s3UploadFlag) {
+        startS3VideoUpload(videoChunks, uploadPath);
+      }
+    }
+
+  }
+
+  const upload = async function uploadFilesToS3(extension, path, file, fileName) {
+    console.log("Initializing upload to s3:::::::::::");
+    return new Promise(async (resolve, reject) => {
+      const bucket = new AWS.S3({
+        accessKeyId: accessKeyId,
+        secretAccessKey: secretAccessKey,
+        region: "us-east-1"
+      });
+      const params = {
+        Bucket: BucketName,
+        Key: path + "/" + fileName + '.' + extension,
+        Body: file
+      };
+      bucket.upload(params, async (err, data) => {
+        if (data) {
+          console.log("Video uploaded")
+        }
+        if (err) {
+          console.log("Video upload failed")
+          console.log(err);
+        }
+      })
+    })
+  }
+
+  function startS3VideoUpload(videoDataChunks, currentRecordingS3Path) {
+    var blob = new Blob(videoDataChunks, {
+      type: "video/webm"
+    });
+    var currentDate = new Date();
+    var frameRate = 1000 / 16;
+    var fileName =
+      `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1)}-${currentDate.getDay()}-${currentDate.getHours()}-${currentDate.getMinutes()}-${currentDate.getSeconds()}-${currentDate.getMilliseconds()}-${ExternalUserId}`
+    let file = new File([blob], fileName, {
+      type: 'video/webm',
+      lastModified: Date.now()
+    })
+
+    upload('webm', currentRecordingS3Path, file, fileName);
   }
 </script>

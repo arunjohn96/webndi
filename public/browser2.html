@@ -32,9 +32,50 @@
   const socket = io.connect();
   const ExternalUserId = prompt("Enter user name:")
   const peerConnections = {};
-  const config = turnConfig;
+  // const config = turnConfig;
   var selAudioDevice, selVideoDevice;
   const ndiStream = new MediaStream()
+  var config;
+
+  async function fetchIceServers() {
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    var raw = JSON.stringify({
+      "group_name": ""
+    });
+    var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+    };
+    var data = await fetch("https://w-call-demo02.herokuapp.com//project/schedule/get_ice_server", requestOptions)
+      .then(response => response.text())
+      .then(result => {
+        console.log("API:::::::::::", JSON.parse(result).data)
+        if (JSON.parse(result).message == "Success") {
+          // return (turnConfig)
+          console.log(JSON.parse(result).data)
+          config = JSON.parse(result).data
+          return JSON.parse(result).data
+        } else {
+          config = turnConfig
+          return (turnConfig)
+        }
+      })
+      .catch(error => {
+        config = turnConfig
+        console.log('error', error)
+        return (turnConfig)
+      });
+    console.log("CONFIG:::::::::", config);
+    return data
+  }
+
+  fetchIceServers()
+
+
+  console.log("OVER::::::::");
 
   function endRecording() {
     socket.emit("stopRecording", 'id', 'roomName', 'eventId', ExternalUserId)
@@ -57,6 +98,7 @@
 
   socket.on("watcher", id => {
     console.log("Received info ::::: connect to ID of server ", id);
+    console.log("RTCPeerConnection CONFIG:::::::::", config);
     const peerConnection = new RTCPeerConnection(config);
     peerConnections[id] = peerConnection;
     console.log(ndiStream.getTracks());
@@ -81,6 +123,16 @@
           deviceId: videoElement,
           exact: true,
           aspectRatio: 1.777777778,
+          width: {
+            min: 960,
+            max: 1920,
+            ideal: 1280
+          },
+          height: {
+            min: 540,
+            max: 1080,
+            ideal: 720
+          }
         }
       }
 
@@ -114,7 +166,19 @@
         },
         video: {
           deviceId: videoElement.getVideoTracks()[0].getSettings().deviceId,
-          exact: true
+          exact: true,
+          aspectRatio: 1.777777778,
+          width: {
+            min: 960,
+            max: 1920,
+            ideal: 1280
+
+          },
+          height: {
+            min: 540,
+            max: 1080,
+            ideal: 720
+          }
         }
       }
       navigator.mediaDevices.getUserMedia(constraints)
@@ -148,6 +212,31 @@
         console.log("event::::::: send candidate", id, event.candidate);
       }
     };
+
+    peerConnection.onconnectionstatechange = (event) => {
+      console.log("connectionstate CHANGE :::", peerConnection.connectionState);
+      switch (peerConnection.connectionState) {
+        case "connected":
+          break;
+        case "disconnected":
+        case "failed":
+          peerConnection.setConfiguration(config)
+          peerConnection
+            .createOffer({
+              iceRestart: true
+            })
+            .then(sdp => peerConnection.setLocalDescription(sdp))
+            .then(() => {
+              socket.emit("offer", id, peerConnection.localDescription);
+              console.log("event::::::: send offer");
+            });
+          // One or more transports has terminated unexpectedly or in an error
+          break;
+        case "closed":
+          // The connection has been closed
+          break;
+      }
+    }
 
   });
 
@@ -218,14 +307,17 @@
           exact: videoSource
         } : undefined,
         aspectRatio: 1.777777778,
-        // width: {
-        //   min: 960,
-        //   max: 1440
-        // },
-        // height: {
-        //   min: 720,
-        //   max: 1080
-        // },
+        width: {
+          min: 960,
+          max: 1920,
+          ideal: 1280
+
+        },
+        height: {
+          min: 540,
+          max: 1080,
+          ideal: 720
+        }
         // frameRate: {
         //   min: 16,
         //   max: 30
