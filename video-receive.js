@@ -162,7 +162,7 @@ function captureAudio(data) {
   audioFrame.set(audioFrameIs)
   emitter.emit('audio', audioFrame)
   frame_count++;
-  console.log("Audio Data::::", audioFrame.byteLength, frame_count);
+  // console.log("Audio Data::::", audioFrame.byteLength, frame_count);
 }
 
 setInterval(()=>{

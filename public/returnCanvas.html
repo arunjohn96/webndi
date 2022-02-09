@@ -240,18 +240,18 @@
   }
 
   function playAudio(data) {
-    frameCount = data.byteLength;
-    myArrayBuffer = audioCtx.createBuffer(2, frameCount/15, 48000);
+    frameCount = data.byteLength; // no_of_channels * sample_size_of_audio
+    myArrayBuffer = audioCtx.createBuffer(2, frameCount/8, 48000);
     var audio = new Float32Array(data)
     for (var channel = 0; channel < 2; channel++) {
       var nowBuffering = myArrayBuffer.getChannelData(channel);
-      for (var i = 0; i < frameCount; i++) {
+      for (var i = 0; i < nowBuffering.byteLength; i++) {
         nowBuffering[i] = audio[i];
       }
     }
     var source = audioCtx.createBufferSource();
     source.buffer = myArrayBuffer;
-    source.connect(compressor);
+    source.connect(audioCtx.destination);
     source.start();
   }
 </script>
