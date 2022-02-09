@@ -155,7 +155,7 @@ function captureVideo(data) {
   // console.log("Data::::");
 }
 
-var frame_count = 0;
+// var frame_count = 0;
 function captureAudio(data) {
   var audioFrameIs = new Float32Array(data.data);
   var audioFrame = new Float32Array(audioFrameIs.byteLength)
@@ -165,10 +165,10 @@ function captureAudio(data) {
   // console.log("Audio Data::::", audioFrame.byteLength, frame_count);
 }
 
-setInterval(()=>{
-  console.log("Audio Frame Rate::::::::::::::", frame_count);
-  frame_count = 0;
-},1000)
+// setInterval(()=>{
+//   console.log("Audio Frame Rate::::::::::::::", frame_count);
+//   frame_count = 0;
+// },1000)
 
 io.sockets.on("connection", socket => {
   ndiSocket = socket;
