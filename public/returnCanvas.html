@@ -241,7 +241,7 @@
 
   function playAudio(data) {
     frameCount = data.byteLength;
-    myArrayBuffer = audioCtx.createBuffer(2, frameCount/30, 48000);
+    myArrayBuffer = audioCtx.createBuffer(2, frameCount/15, 48000);
     var audio = new Float32Array(data)
     for (var channel = 0; channel < 2; channel++) {
       var nowBuffering = myArrayBuffer.getChannelData(channel);
