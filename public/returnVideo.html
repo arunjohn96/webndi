@@ -21,7 +21,9 @@
 <script>
   let peerConnection;
   const config = turnConfig;
-  const socket = io({path: '/ndi_return/socket.io'});
+  const socket = io({
+    path: '/ndi_return/socket.io'
+  });
   socket.emit('message', "HELLO:::::::::::::")
   let silence = () => {
     let ctx = new AudioContext(),
@@ -118,7 +120,11 @@
   function handleRemoteStreamAdded(event) {
     console.log('Remote stream added.');
     video.srcObject = event.streams[0];
-    video.play()
+    console.log(video.srcObject);
+    setTimeout(() => {
+      video.play()
+
+    }, 2000)
     // video.muted = false
 
   };
