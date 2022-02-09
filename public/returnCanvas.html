@@ -214,6 +214,7 @@
       sampleRate: 48000
     });
     audioStreamDestinationNode = new MediaStreamAudioDestinationNode(audioCtx, {sampleRate:48000});
+
     console.log("AUDIO STREAM TRACK");
     console.log(audioStreamDestinationNode.stream);
     compressor = audioCtx.createDynamicsCompressor();
@@ -240,18 +241,17 @@
   }
 
   function playAudio(data) {
-    frameCount = data.byteLength; // no_of_channels * sample_size_of_audio
-    myArrayBuffer = audioCtx.createBuffer(2, frameCount/8, 48000);
     var audio = new Float32Array(data)
+    // console.log(audio);
+    myArrayBuffer = audioCtx.createBuffer(2, audio.length, 48000);
     for (var channel = 0; channel < 2; channel++) {
       var nowBuffering = myArrayBuffer.getChannelData(channel);
-      for (var i = 0; i < nowBuffering.byteLength; i++) {
+      for (var i = 0; i < audio.length; i++) {
         nowBuffering[i] = audio[i];
       }
     }
-    var source = audioCtx.createBufferSource();
-    source.buffer = myArrayBuffer;
-    source.connect(audioCtx.destination);
-    source.start();
+    const sourceNode = new AudioBufferSourceNode(audioCtx, { buffer: myArrayBuffer })
+    sourceNode.connect(audioStreamDestinationNode);
+    sourceNode.start(0);
   }
 </script>
