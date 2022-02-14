@@ -3,7 +3,6 @@ const app = express();
 const http = require("http");
 const server = http.createServer(app);
 const fs = require('fs')
-const AWS = require("aws-sdk");
 const io = require("socket.io")(server, {
   cors: {
     origin: '*',
@@ -25,11 +24,7 @@ function success(err, id, type) {
 }
 // API URLS
 app.get("/stream/video", function(req, res) {
-
   res.sendFile(__dirname + "/public/AudioVideoBuffer.html");
-});
-app.get("/stream/video_demo", function(req, res) {
-  res.sendFile(__dirname + "/public/browser3.html");
 });
 app.get("/stream/panel", function(req, res) {
   res.sendFile(__dirname + "/public/watch.html");
@@ -37,9 +32,11 @@ app.get("/stream/panel", function(req, res) {
 app.get("/stream/ndi_receiver", function(req, res) {
   res.sendFile(__dirname + "/public/ndi_receiver.html");
 });
-
 app.get("/proxy/browser", function(req, res) {
   res.sendFile(__dirname + "/public/browser2.html");
+});
+app.get("/stream/hd_video", function(req, res) {
+  res.sendFile(__dirname + "/public/AudioVideoBuffer2.html");
 });
 
 // SOCKET URLS

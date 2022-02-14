@@ -75,14 +75,18 @@ async function startBot(url) {
   });
   const page = await browser.newPage();
   await page.setViewport({
-    width: 1920,
-    height: 1080
+    width: 3840,
+    height: 2160
   })
   // await page.goto('http://localhost:9000/stream/video');
   var PUPPET_URL = url
   await page.goto(`${PUPPET_URL}`);
   console.log("Navigated to Page::::::::::::: ", PUPPET_URL, "IP:::");
-  await page.click('#startNdiStreaming')
+  setTimeout(()=>{
+    page.click('#startNdiStreaming')
+    console.log("CLICK:::::::::::");
+
+  }, 4000)
   console.log("Starting NDI :::::::::::::");
 };
 server.listen(port, () => console.log(`Server is running on port ${port}`));
