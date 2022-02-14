@@ -10,11 +10,11 @@ CSendVideo::CSendVideo(Properties& properties)
     CUtil::GetProperty(m_yres, properties, "yres");
     CUtil::GetProperty(m_framerate, properties, "frameRate");
 
-    CUtil::log(properties, "initializing audio");
+    CUtil::log(properties, "initializing video");
     cout<<"  m_xres: "<<m_xres
         <<endl<<"  m_yres: "<<m_yres
         <<endl<<"  m_framerate: "<<m_framerate
-        <<endl; 
+        <<endl;
 
     m_sender = CNdi::CreateSender(m_channel_name, m_channel_group) ;
     if (m_sender)
@@ -23,8 +23,9 @@ CSendVideo::CSendVideo(Properties& properties)
 
         frame.xres = m_xres;
         frame.yres = m_yres;
-        frame.FourCC = NDIlib_FourCC_type_RGBA;
-        frame.line_stride_in_bytes = m_xres * 4;
+        // frame.FourCC = NDIlib_FourCC_type_RGBA;
+        frame.FourCC = NDIlib_FourCC_type_I420;
+        // frame.line_stride_in_bytes = m_xres * 4;
     }
     else
         CUtil::log(properties, "failed sender creation for video") ;
@@ -63,4 +64,3 @@ int CSendVideo::execute(uint8_t*& buffer, size_t& bsize)
     NDIlib_send_send_video_v2(m_sender, &frame);
     return 0;
 }
-
