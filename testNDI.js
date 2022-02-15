@@ -11,10 +11,12 @@ const io = require("socket.io")(server, {
   maxHttpBufferSize: 1e8
 });
 const addon = require('bindings')('ndi');
-ndi = addon.ndi;
-const emitter = new events.EventEmitter();
 
-var videoProperties = {
+const port = process.env.PORT || 9000;
+const emitter = new events.EventEmitter();
+ndi = addon.ndi;
+
+const videoProperties = {
   id: 'v001',
   type: 'video',
   channelName: 'test',
@@ -37,8 +39,6 @@ const audioProperties = {
   channelIps: '',
   channelGroup: '',
 };
-
-
 const returnVideoProperties = {
   id: 'x003',
   type: 'video',
@@ -61,11 +61,8 @@ const returnAudioProperties = {
   channelIps: ''
 };
 
-app.use('/static', express.static('public'))
-
-const port = process.env.PORT || 9000;
-
 // API URLS
+app.use('/static', express.static('public'))
 app.get("/test", function(req, res) {
   res.sendFile(__dirname + "/public/TestNDI.html");
 });
@@ -89,6 +86,29 @@ function captureAudio(data) {
   emitter.emit('audio', audioFrame)
   // console.log("Audio Data::::", audioFrame.byteLength);
 }
+
+async function initializeReturnFeed(videoProperties) {
+  var audioProperty = returnAudioProperties
+  audioProperty.id = videoProperties.id + '-audio'
+  audioProperty.channelName = videoProperties.channelName
+  audioProperty.channelGroup = videoProperties.channelGroup
+  audioProperty.channelIps = videoProperties.channelIps
+  audioProperty.command = "start"
+  videoProperties.command = "start"
+  console.log("initializeReturnFeed::::::::::::::::", videoProperties);
+  console.log(audioProperty);
+  ndi('channel-control', videoProperties);
+  ndi('channel-control', audioProperty);
+  ndi('create-receive-video-channel', videoProperties);
+  ndi('receive-video', videoProperties, message, captureVideo);
+  ndi('create-receive-audio-channel', audioProperty);
+  ndi('receive-audio', audioProperty, message, captureAudio);
+}
+
+function message(msg) {
+  console.log(msg)
+}
+
 // SOCKET URLS
 io.sockets.on("error", e => console.log(e));
 io.sockets.on("connection", socket => {
@@ -131,44 +151,14 @@ io.sockets.on("connection", socket => {
   });
 
   socket.on("ready", (id) => {
-    console.log("::::::::::::::::::::::::::::::", id);
-    socket.to(id).emit('message', 'hai!!!')
-
-    socket.emit('message', "ready received on server :::")
-
-    // initializeReturnFeed(videoProperties);
     emitter.on('rgba', (data) => {
       socket.emit('rgba_receiver', data.buffer)
     });
-
     emitter.on('audio', (data) => {
       socket.emit('audio_receiver', data.buffer)
     });
-
   });
 
 });
-
-async function initializeReturnFeed(videoProperties) {
-  var audioProperty = returnAudioProperties
-  audioProperty.id = videoProperties.id + '-audio'
-  audioProperty.channelName = videoProperties.channelName
-  audioProperty.channelGroup = videoProperties.channelGroup
-  audioProperty.channelIps = videoProperties.channelIps
-  audioProperty.command = "start"
-  videoProperties.command = "start"
-  console.log("initializeReturnFeed::::::::::::::::", videoProperties);
-  console.log(audioProperty);
-  ndi('channel-control', videoProperties);
-  ndi('channel-control', audioProperty);
-  ndi('create-receive-video-channel', videoProperties);
-  ndi('receive-video', videoProperties, message, captureVideo);
-  ndi('create-receive-audio-channel', audioProperty);
-  ndi('receive-audio', audioProperty, message, captureAudio);
-}
-
-function message(msg) {
-  console.log(msg)
-}
 
 server.listen(port, () => console.log(`Server is running on port ${port}`));

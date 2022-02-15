@@ -31,20 +31,24 @@
 
 </html>
 <script>
+  // Variables for Audio
   var audioCtx, audioStreamDestinationNode;
   var audioStream = new MediaStream();
   var mainAudioProcessor;
-  var source;
-  let peerConnection;
-  var videoFlag = false;
   var audioFlag = false;
+  var source;
 
 
+  // Variables for Video
+  var video = document.getElementById('VideoSource');
+  var videoFlag = false;
   var canvas = document.getElementById('Bot');
   var ctx = canvas.getContext('2d');
   var returnCanvas = document.getElementById('returnBot');
   var returnCtx = returnCanvas.getContext('2d');
 
+  // Variables for NDI
+  const ndiSocket = io.connect();
   var currentDate = new Date();
   var channelName = 'test';
   var channelIps = '';
@@ -56,7 +60,6 @@
     currentDate.getMinutes() +
     currentDate.getSeconds();
   var frameRate = 1000 / 24;
-
   var videoProperties = {
     id: channelId,
     type: 'video',
@@ -68,49 +71,8 @@
     frameRate: frameRate + ''
   };
   var config = turnConfig;
-  const ndiSocket = io.connect();
-  var video = document.getElementById('VideoSource');
 
-  ndiSocket.on("rgba_receiver", data => {
-    console.log("NDI-RETURN-SERVER::::::::::", "rgba_received::::::");
-    // ctx.clearRect(0, 0, canvas.width, canvas.height)
-    try {
-      var rgba = new Uint8ClampedArray(data)
-      const image = new ImageData(rgba, 640, 360)
-      returnCtx.putImageData(image, 0, 0)
-
-    } catch (e) {
-      console.log("ERROR::::", e);
-    }
-  });
-
-  ndiSocket.on("audio_receiver", data => {
-    // console.log("NDI-RETURN-SERVER::::::::::", "rgba_received::::::");
-    // ctx.clearRect(0, 0, canvas.width, canvas.height)
-    if (audioFlag) {
-      try {
-        playAudio(data);
-
-      } catch (e) {
-        console.log("ERROR::::", e);
-      }
-
-    }
-  });
-
-
-
-  function startNdiStreaming() {
-    videoFlag = true
-    audioFlag = true
-
-  }
-
-  function stopNdiStreaming() {
-    videoFlag = false
-    audioFlag = false
-  }
-
+  // NDI Feed Data processing
   video.addEventListener('play', function() {
     startNdiStreaming();
     sendAudio();
@@ -152,15 +114,9 @@
     console.log("Completed Video:::::::::");
   }, 0);
 
-
-  function updateSource(audioStream) {
-    console.log(typeof audioCtx, "audioCtx Type::::::::::")
-    if (typeof audioCtx !== 'undefined') {
-      source = audioCtx.createMediaStreamSource(audioStream);
-      source.connect(mainAudioProcessor);
-      mainAudioProcessor.connect(audioCtx.destination)
-      console.log("Audio Source Updated::::::::::::");
-    }
+  function startNdiStreaming() {
+    videoFlag = true
+    audioFlag = true
   }
 
   function sendAudio() {
@@ -193,6 +149,35 @@
       console.log("Completed Audio Context :::::");
     }
   }
+
+
+  // NDI Return Data processing
+  ndiSocket.on("rgba_receiver", data => {
+    console.log("NDI-RETURN-SERVER::::::::::", "rgba_received::::::");
+    // ctx.clearRect(0, 0, canvas.width, canvas.height)
+    try {
+      var rgba = new Uint8ClampedArray(data)
+      const image = new ImageData(rgba, 640, 360)
+      returnCtx.putImageData(image, 0, 0)
+
+    } catch (e) {
+      console.log("ERROR::::", e);
+    }
+  });
+
+  ndiSocket.on("audio_receiver", data => {
+    // console.log("NDI-RETURN-SERVER::::::::::", "rgba_received::::::");
+    // ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if (audioFlag) {
+      try {
+        playAudio(data);
+
+      } catch (e) {
+        console.log("ERROR::::", e);
+      }
+
+    }
+  });
 
   function playAudio(data) {
     var audio = new Float32Array(data)
