@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Bot</title>
+  <meta charset="UTF-8" />
+</head>
+
+<body>
+  <div>
+    <strong>Video</strong>
+    <br>
+    <video id="VideoSource" src="/video" width="640" height="360" loop controls muted>
+    </video>
+  </div>
+  <br>
+  <div>
+    <strong>NDI Return Feed</strong>
+    <br>
+    <canvas name="returnBot" id="returnBot" width="640" height="360"></canvas>
+  </div>
+  <br>
+  <div>
+    <!-- <strong>NDI Feed</strong> -->
+    <br>
+    <canvas name="Bot" id="Bot" width="640" height="360" hidden></canvas>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/static/config.js"></script>
+</body>
+
+</html>
+<script>
+  var audioCtx, audioStreamDestinationNode;
+  var audioStream = new MediaStream();
+  var mainAudioProcessor;
+  var source;
+  let peerConnection;
+  var videoFlag = false;
+  var audioFlag = false;
+
+
+  var canvas = document.getElementById('Bot');
+  var ctx = canvas.getContext('2d');
+  var returnCanvas = document.getElementById('returnBot');
+  var returnCtx = returnCanvas.getContext('2d');
+
+  var currentDate = new Date();
+  var channelName = 'test';
+  var channelIps = '';
+  var channelGroup = '';
+  var channelId = channelName + canvas.width + currentDate.getDate() +
+    (currentDate.getMonth() + 1) +
+    currentDate.getFullYear() +
+    currentDate.getHours() +
+    currentDate.getMinutes() +
+    currentDate.getSeconds();
+  var frameRate = 1000 / 24;
+
+  var videoProperties = {
+    id: channelId,
+    type: 'video',
+    channelName: channelName,
+    channelGroup: channelGroup,
+    channelIps: channelIps,
+    xres: canvas.width + '',
+    yres: canvas.height + '',
+    frameRate: frameRate + ''
+  };
+  var config = turnConfig;
+  const ndiSocket = io.connect();
+  var video = document.getElementById('VideoSource');
+
+  ndiSocket.on("rgba_receiver", data => {
+    console.log("NDI-RETURN-SERVER::::::::::", "rgba_received::::::");
+    // ctx.clearRect(0, 0, canvas.width, canvas.height)
+    try {
+      var rgba = new Uint8ClampedArray(data)
+      const image = new ImageData(rgba, 640, 360)
+      returnCtx.putImageData(image, 0, 0)
+
+    } catch (e) {
+      console.log("ERROR::::", e);
+    }
+  });
+
+  ndiSocket.on("audio_receiver", data => {
+    // console.log("NDI-RETURN-SERVER::::::::::", "rgba_received::::::");
+    // ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if (audioFlag) {
+      try {
+        playAudio(data);
+
+      } catch (e) {
+        console.log("ERROR::::", e);
+      }
+
+    }
+  });
+
+
+
+  function startNdiStreaming() {
+    videoFlag = true
+    audioFlag = true
+
+  }
+
+  function stopNdiStreaming() {
+    videoFlag = false
+    audioFlag = false
+  }
+
+  video.addEventListener('play', function() {
+    startNdiStreaming();
+    sendAudio();
+    console.log("Initializing Video:::::::::");
+    var $this = this; //cache
+    const trackProcessor = new MediaStreamTrackProcessor({
+      track: canvas.captureStream(frameRate).getVideoTracks()[0]
+    });
+
+    const reader = trackProcessor.readable.getReader();
+
+    ndiSocket.emit("ready");
+    (async function loop() {
+      if (!$this.paused && !$this.ended) {
+        if (videoFlag) {
+
+          ctx.drawImage($this, 0, 0, parseInt(videoProperties.xres), parseInt(videoProperties.yres));
+          const result = await reader.read();
+          const frame = new Uint8ClampedArray(parseInt(videoProperties.xres) * parseInt(videoProperties.yres) * 2.5)
+          result.value.copyTo(frame);
+          const videoProperty = {
+            id: videoProperties.id,
+            channelName: videoProperties.channelName,
+            channelGroup: videoProperties.channelGroup,
+            channelIps: videoProperties.channelIps,
+            frameRate: videoProperties.frameRate,
+            data: frame,
+            type: videoProperties.type,
+            xres: videoProperties.xres,
+            yres: videoProperties.yres
+          }
+          ndiSocket.emit('video frames', videoProperty);
+          // ctx.clearRect(0, 0, canvas.width, canvas.height);
+          result.value.close()
+        }
+        setTimeout(loop, frameRate); // drawing at 30fps
+      }
+    })();
+    console.log("Completed Video:::::::::");
+  }, 0);
+
+
+  function updateSource(audioStream) {
+    console.log(typeof audioCtx, "audioCtx Type::::::::::")
+    if (typeof audioCtx !== 'undefined') {
+      source = audioCtx.createMediaStreamSource(audioStream);
+      source.connect(mainAudioProcessor);
+      mainAudioProcessor.connect(audioCtx.destination)
+      console.log("Audio Source Updated::::::::::::");
+    }
+  }
+
+  function sendAudio() {
+    if (typeof source === 'undefined') {
+      audioCtx = new AudioContext({
+        sampleRate: 48000,
+      });
+      audioStreamDestinationNode = new MediaStreamAudioDestinationNode(audioCtx, {
+        sampleRate: 48000
+      });
+      console.log(video.captureStream().getAudioTracks());
+      video.captureStream().getAudioTracks().forEach((track, i) => {
+        audioStream.addTrack(track)
+      });
+
+      console.log("Initializing Audio Context :::::", audioStream);
+      source = audioCtx.createMediaStreamSource(audioStream);
+      audioCtx.audioWorklet.addModule("/static/main_audio_processor.js")
+        .then(() => {
+          mainAudioProcessor = new AudioWorkletNode(audioCtx, "main-audio-processor");
+          source.connect(mainAudioProcessor);
+          mainAudioProcessor.connect(audioCtx.destination)
+          mainAudioProcessor.port.onmessage = (e) => {
+            if (audioFlag) {
+              // console.log(e.data);
+              ndiSocket.emit('audio frames', e.data, channelName, channelGroup)
+            }
+          }
+        });
+      console.log("Completed Audio Context :::::");
+    }
+  }
+
+  function playAudio(data) {
+    var audio = new Float32Array(data)
+    myArrayBuffer = audioCtx.createBuffer(2, audio.length, 48000);
+    for (var channel = 0; channel < 2; channel++) {
+      var nowBuffering = myArrayBuffer.getChannelData(channel);
+      for (var i = 0; i < audio.length; i++) {
+        nowBuffering[i] = audio[i];
+      }
+    }
+    const sourceNode = new AudioBufferSourceNode(audioCtx, {
+      buffer: myArrayBuffer
+    })
+    sourceNode.connect(audioCtx.destination);
+    sourceNode.start(0);
+  }
+</script>

@@ -62,6 +62,7 @@ int CReceiveAudio::execute(uint8_t*& buffer, size_t& bsize)
 
         // Example: no_channels=2 channel_stride_in_bytes=23040 no_samples=5760 sample_rate=48000
         bsize = audio_frame.no_channels * audio_frame.channel_stride_in_bytes;
+        // cout<<"channels::: "<<audio_frame.no_channels<<endl;
         buffer = (uint8_t*)malloc(bsize+1);
         memcpy(buffer, (uint8_t*)audio_frame.p_data, bsize);
         NDIlib_recv_free_audio_v2(m_receiver, &audio_frame);
